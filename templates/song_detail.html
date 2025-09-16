@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ song.title }} — {{ song.artist.name }}{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">{{ song.title }} — {{ song.artist.name }}</h1>
+<div class="space-y-3">
+  {% for line in song.lines.all %}
+    <article id="L{{ line.no }}" class="border rounded p-3">
+      <div class="text-sm text-slate-500">#{{ line.no }}</div>
+      <p class="font-medium">{{ line.original }}</p>
+      {% if line.romanized %}<p class="italic">{{ line.romanized }}</p>{% endif %}
+      <p class="text-emerald-700">{{ line.translation_en }}</p>
+    </article>
+  {% endfor %}
+</div>
+{% endblock %}

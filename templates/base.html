@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block title %}Lyrics Library{% endblock %}</title>
+    <link rel="canonical" href="{{ request.build_absolute_uri }}" />
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="p-4 max-w-4xl mx-auto">
+    <header class="mb-4 flex gap-3 items-center">
+      <a href="/" class="font-bold">LyricsLib</a>
+      <form action="/search/" method="get" class="ml-auto">
+        <input name="q" value="{{ q|default:'' }}" placeholder="Search…" class="border rounded px-3 py-1"/>
+      </form>
+    </header>
+    {% block content %}{% endblock %}
+  </body>
+</html>

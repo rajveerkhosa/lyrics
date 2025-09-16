@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Home — Lyrics Library{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-2">Songs</h1>
+<ul class="list-disc ml-6">
+  {% for s in songs %}
+    <li>
+      <a class="text-blue-700 underline" href="{% url 'song_detail' artist=s.artist.slug song=s.slug %}">
+        {{ s.title }} — {{ s.artist.name }}{% if s.year %} ({{ s.year }}){% endif %}
+      </a>
+    </li>
+  {% empty %}
+    <li>No songs yet.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
