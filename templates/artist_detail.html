@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}{{ artist.name }} — Lyrics Library{% endblock %}
+{% block content %}
+
+<!-- Full-bleed background with dark overlay -->
+<div class="fixed inset-0 -z-10">
+  <div class="w-full h-full bg-cover bg-center"
+       style="background-image:url('https://images.unsplash.com/photo-1721623777765-1381ba32859c?auto=format&fit=crop&w=1800&q=60');"></div>
+  <div class="absolute inset-0 bg-black/60"></div>
+</div>
+
+<!-- Page container -->
+<div class="relative z-10 pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8 pb-16">
+  <div class="max-w-7xl mx-auto">
+
+    <!-- Top: Artist portrait + name + meta -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+      <!-- Portrait + name -->
+      <div class="flex flex-col items-center lg:items-start gap-6">
+        <!-- Portrait: graceful fallback if URL missing/broken -->
+        <div class="w-[260px] h-[360px] sm:w-[320px] sm:h-[440px] rounded-[2rem] overflow-hidden bg-gray-800/50 shadow-2xl ring-1 ring-white/10">
+          <img
+            src="{{ artist.image_url|default:'https://images.unsplash.com/photo-1593459866242-426f7768f3dc?auto=format&fit=crop&w=900&q=60' }}"
+            alt="{{ artist.name }}"
+            class="w-full h-full object-cover"
+            loading="lazy"
+            onerror="this.src='https://images.unsplash.com/photo-1593459866242-426f7768f3dc?auto=format&fit=crop&w=900&q=60';"
+          >
+        </div>
+
+        <div class="text-center lg:text-left">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">
+            {{ artist.name }}
+          </h1>
+          <p class="mt-2 text-white/70">
+            {% with cnt=songs|length %}{{ cnt }} song{{ cnt|pluralize }}{% endwith %}
+            {% if year_min and year_max %} • {{ year_min }}–{{ year_max }}{% endif %}
+          </p>
+        </div>
+      </div>
+
+      <!-- About card -->
+      <div class="w-full">
+        {% if artist.about %}
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:p-8 shadow-xl ring-1 ring-white/10">
+            <h2 class="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">About Artist</h2>
+            <p class="text-white/85 leading-relaxed text-sm sm:text-base">
+              {{ artist.about }}
+            </p>
+          </div>
+        {% else %}
+          <div class="bg-white/5 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:p-8 ring-1 ring-white/10 text-white/70">
+            No bio yet. Add one in Admin → Artist → “About”.
+          </div>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Songs -->
+    <section class="mt-10 sm:mt-12">
+      <div class="flex items-end justify-between mb-4 sm:mb-6">
+        <h2 class="text-2xl sm:text-3xl font-bold">Popular Songs</h2>
+        {% if songs|length > 9 %}
+        <button id="toggleSongs"
+                data-more="Show all"
+                data-less="Show less"
+                class="hidden sm:inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm transition">
+          Show all
+          <svg id="toggleIcon" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+        {% endif %}
+      </div>
+
+      <ul id="songsGrid"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {% for s in songs %}
+          <li class="{% if forloop.counter > 9 %}hidden extra-song{% endif %}">
+            <a href="{% url 'song_detail' artist=artist.slug song=s.slug %}"
+               class="group block bg-white/8 hover:bg-white/12 ring-1 ring-white/10 rounded-2xl p-3 sm:p-4 transition">
+              <!-- Square art stub / initial -->
+              <div class="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-white/10 to-white/20 mb-3">
+                <div class="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-white/80 group-hover:scale-105 transition">
+                  {{ s.title|first|upper }}
+                </div>
+              </div>
+              <div class="px-0.5">
+                <h3 class="font-semibold truncate">{{ s.title }}</h3>
+                <p class="text-white/70 text-sm">
+                  {% if s.year %}{{ s.year }}{% endif %}
+                </p>
+              </div>
+            </a>
+          </li>
+        {% empty %}
+          <li class="text-white/70">No songs yet. Import a CSV and mark songs as “published”.</li>
+        {% endfor %}
+      </ul>
+
+      {% if songs|length > 9 %}
+      <div class="sm:hidden mt-4 flex justify-center">
+        <button id="toggleSongsSm"
+                data-more="Show all"
+                data-less="Show less"
+                class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full text-sm transition">
+          Show all
+          <svg id="toggleIconSm" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-width="2" d="M6 9l6 6 6-6"/>
+          </svg>
+        </button>
+      </div>
+      {% endif %}
+    </section>
+
+  </div>
+</div>
+
+<script>
+  // Show all / Show less for songs (desktop + mobile buttons)
+  const toggle = (btnId, iconId) => {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    const icon = document.getElementById(iconId);
+    let open = false;
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.extra-song').forEach(el => el.classList.toggle('hidden'));
+      open = !open;
+      btn.textContent = open ? btn.dataset.less : btn.dataset.more;
+      if (icon) btn.appendChild(icon);
+    });
+  };
+  toggle('toggleSongs', 'toggleIcon');
+  toggle('toggleSongsSm', 'toggleIconSm');
+</script>
+{% endblock %}

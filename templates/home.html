@@ -1,16 +1,85 @@
 {% extends "base.html" %}
 {% block title %}Home — Lyrics Library{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold mb-2">Songs</h1>
-<ul class="list-disc ml-6">
-  {% for s in songs %}
-    <li>
-      <a class="text-blue-700 underline" href="{% url 'song_detail' artist=s.artist.slug song=s.slug %}">
-        {{ s.title }} — {{ s.artist.name }}{% if s.year %} ({{ s.year }}){% endif %}
-      </a>
-    </li>
-  {% empty %}
-    <li>No songs yet.</li>
-  {% endfor %}
-</ul>
+
+<!-- Background image + dark overlay -->
+<div class="relative">
+  <div class="fixed inset-0 -z-10">
+    <div class="w-full h-full bg-cover bg-center"
+         style="background-image:url('https://images.unsplash.com/photo-1721623777765-1381ba32859c?auto=format&fit=crop&w=1600&q=60');"></div>
+    <div class="absolute inset-0 bg-black/60"></div>
+  </div>
+</div>
+
+<div class="relative z-10 min-h-[calc(100vh-3.5rem)] sm:min-h-[calc(100vh-4rem)]">
+  <!-- Hero -->
+  <section class="pt-16 sm:pt-20 pb-8 sm:pb-12 lg:pb-16 flex flex-col items-center text-center px-4 sm:px-6 lg:px-8">
+    <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-6 sm:mb-8 tracking-wide">MUSICLYRICS.DEV</h1>
+    <form action="/search/" method="get" class="relative w-full max-w-[600px]">
+      <svg class="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-300 h-4 w-4 sm:h-5 sm:w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      <input name="q" type="text" placeholder="Search for songs, artists, or albums..."
+             class="w-full h-10 sm:h-12 lg:h-[50px] pl-10 sm:pl-12 pr-3 sm:pr-4 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all text-sm sm:text-base"/>
+    </form>
+  </section>
+
+  <!-- Grid -->
+  <section class="px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 lg:pb-16">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-7xl mx-auto">
+
+      <!-- Top Charts -->
+      <div class="order-2 lg:order-1">
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 lg:p-8 h-fit">
+          <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">Top Charts</h2>
+
+          <div class="flex bg-white/10 rounded-full p-1 mb-6 sm:mb-8">
+            <button class="flex-1 py-2 px-2 sm:px-4 lg:px-6 rounded-full text-xs sm:text-sm bg-white text-black">Songs</button>
+            <button class="flex-1 py-2 px-2 sm:px-4 lg:px-6 rounded-full text-xs sm:text-sm text-white/70 hover:text-white">Artists</button>
+            <button class="flex-1 py-2 px-2 sm:px-4 lg:px-6 rounded-full text-xs sm:text-sm text-white/70 hover:text-white">Albums</button>
+          </div>
+
+          <div class="space-y-3 sm:space-y-4">
+            {% for s in top_songs %}
+              <a href="{% url 'song_detail' artist=s.artist.slug song=s.slug %}"
+                 class="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-lg hover:bg-white/10 transition-colors">
+                <span class="text-white/60 font-bold text-base sm:text-lg w-5 sm:w-6 flex-shrink-0">{{ forloop.counter }}</span>
+                <div class="min-w-0">
+                  <div class="font-medium text-sm sm:text-base truncate">{{ s.title }}</div>
+                  <div class="text-white/60 text-xs sm:text-sm truncate">
+                    <a href="{% url 'artist_detail' artist=s.artist.slug %}" class="hover:underline">
+                      {{ s.artist.name }}
+                    </a>
+                  </div>
+                </div>
+              </a>
+            {% empty %}
+              <div class="text-white/60 text-sm">No songs yet. Import a CSV to populate charts.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Featured Videos -->
+      <div class="order-1 lg:order-2">
+        <div class="space-y-4 sm:space-y-6">
+          {% for v in featured_videos %}
+            <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 hover:bg-white/10 transition-all shadow-lg">
+              <div class="mb-3 sm:mb-4">
+                <h3 class="font-bold text-base sm:text-lg truncate">{{ v.title }}</h3>
+                <p class="text-white/70 text-sm sm:text-base truncate">{{ v.artist }}</p>
+              </div>
+              <div class="w-full h-32 sm:h-40 lg:h-[180px] rounded-lg overflow-hidden bg-gray-800">
+                <img src="{{ v.thumbnail }}" alt="{{ v.title }} by {{ v.artist }}" class="w-full h-full object-cover" loading="lazy">
+              </div>
+            </div>
+          {% empty %}
+            <div class="text-white/60 text-sm">No featured videos yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
 {% endblock %}
