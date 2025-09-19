@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Artist, Song, Line
-
+import json
 
 def home(request):
     top_songs = (
@@ -31,9 +31,13 @@ def home(request):
     return render(
         request,
         "home.html",
-        {"artists": artists, "songs": songs, "top_songs": top_songs, "featured_videos": featured_videos},
+        {
+            "artists": artists,
+            "songs": songs,
+            "top_songs": top_songs,
+            "featured_videos": featured_videos,
+        },
     )
-
 
 def song_detail(request, artist, song):
     s = get_object_or_404(
@@ -42,8 +46,22 @@ def song_detail(request, artist, song):
         slug=song,
         is_published=True,
     )
-    return render(request, "song_detail.html", {"song": s})
 
+    # Build lyrics JSON for the template’s JS
+    lines_qs = s.lines.all().order_by("no")
+    lyrics = []
+    for ln in lines_qs:
+        lyrics.append({
+            "punjabi": [ln.original] if ln.original else [],
+            "romanization": [ln.romanized] if ln.romanized else [],
+            "translation": [ln.translation_en] if ln.translation_en else [],
+        })
+
+    return render(
+        request,
+        "song_detail.html",
+        {"song": s, "lyrics_json": json.dumps(lyrics, ensure_ascii=False)},
+    )
 
 def search(request):
     q = (request.GET.get("q") or "").strip()
@@ -80,9 +98,7 @@ def search(request):
         },
     )
 
-
 def artist_detail(request, artist):
-    """Artist profile page — no Top Charts here, only this artist info + songs."""
     a = get_object_or_404(Artist, slug=artist)
     songs = (
         Song.objects.filter(artist=a, is_published=True)

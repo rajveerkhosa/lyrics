@@ -1,51 +1,130 @@
 {% extends "base.html" %}
-{% block title %}{{ song.title }} — {{ song.artist.name }}{% endblock %}
+{% load static %}
+
 {% block content %}
-<section class="px-4 sm:px-6 lg:px-8 pt-16 sm:pt-20 pb-10">
-  <div class="max-w-3xl mx-auto">
-    <h1 class="text-2xl font-semibold mb-4">{{ song.title }} — {{ song.artist.name }}</h1>
-    <div class="space-y-4">
-      {% for line in song.lines.all %}
-        <article id="L{{ line.no }}" class="bg-white/5 rounded-xl p-4 border border-white/10">
-          <div class="flex items-start gap-3">
-            <span class="text-white/60 text-sm w-10">#{{ line.no }}</span>
-            <div class="flex-1">
-              <p class="font-medium">{{ line.original }}</p>
-              {% if line.romanized %}<p class="italic text-white/70">{{ line.romanized }}</p>{% endif %}
-              <p class="text-emerald-400">{{ line.translation_en }}</p>
-            </div>
-            <button type="button" class="copylink text-xs px-2 py-1 rounded border border-white/20 hover:bg-white/10"
-                    data-no="{{ line.no }}" aria-label="Copy link to line {{ line.no }}">
-              Copy link
-            </button>
-          </div>
-        </article>
-      {% endfor %}
-    </div>
+<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
+
+  <!-- Background Video -->
+  <div class="fixed inset-0 w-full h-full overflow-hidden z-0">
+    <video autoplay muted loop playsinline class="w-full h-full object-cover">
+      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+    </video>
+    <div class="absolute inset-0 bg-black/70"></div>
   </div>
-</section>
+
+  <!-- Header -->
+  {% include "partials/header.html" %}
+
+  <!-- Main Content -->
+  <main class="relative z-10 pt-16 sm:pt-20">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+      <!-- Hero -->
+      <section class="mb-8 sm:mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start">
+
+          <!-- Left - Album Cover -->
+          <div class="flex justify-center md:justify-start">
+            <div class="w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 lg:w-64 lg:h-64 rounded-2xl overflow-hidden bg-gray-800 shadow-2xl">
+              <img
+                src="{{ song.album_cover|default:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1080&auto=format&fit=crop' }}"
+                alt="{{ song.album_name|default:'Album cover' }}"
+                class="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+
+          <!-- Right - Song Info -->
+          <div class="space-y-4 sm:space-y-6 text-center md:text-left">
+            <div>
+              <h1 class="text-white font-bold text-2xl sm:text-3xl lg:text-4xl xl:text-5xl mb-2">
+                {{ song.title }}
+              </h1>
+              <p class="text-white/80 text-lg sm:text-xl">
+                by
+                <a href="{% url 'artist_detail' artist=song.artist.slug %}"
+                   class="text-white hover:text-white/80 underline underline-offset-4 transition-colors duration-200">
+                  {{ song.artist.name }}
+                </a>
+              </p>
+            </div>
+
+            <!-- Metadata -->
+            <div class="text-white/70 text-sm sm:text-base">
+              <p>
+                {% if song.year %}Released {{ song.year }} ·{% endif %}
+                {% if song.track_no %} Track {{ song.track_no }} ·{% endif %}
+                {% if song.album_name %}
+                  on <span class="underline underline-offset-4">{{ song.album_name }}</span>
+                {% endif %}
+              </p>
+            </div>
+
+            <!-- Example tags (optional) -->
+            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+              <span class="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 text-white px-2 py-0.5 text-xs font-medium">Explicit</span>
+              <span class="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 text-white px-2 py-0.5 text-xs font-medium">Single</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Toggle Section -->
+      <section class="mb-8 sm:mb-12">
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <label class="text-white font-medium text-sm sm:text-base">
+              Display:
+            </label>
+            <div class="flex flex-wrap gap-3">
+              <button data-toggle="punjabi" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
+              <button data-toggle="romanization" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
+              <button data-toggle="translation" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lyrics -->
+      <section class="mb-8 sm:mb-12">
+        <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 sm:p-8 lg:p-10">
+          <h3 class="text-white font-medium text-xl sm:text-2xl mb-6 pb-3 border-b border-white/20">
+            Lyrics
+          </h3>
+          <div class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+            <div id="lyrics-container" class="space-y-8"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="border-t border-white/20 pt-6 sm:pt-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-white/60 text-xs sm:text-sm">
+          <div class="flex items-center gap-4">
+            <span>Source: Genius.com</span>
+            <a href="#" class="flex items-center gap-2 hover:text-white/80 transition-colors duration-200">
+              <!-- external link icon -->
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="inline-block"><path d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14 21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              View Original
+            </a>
+          </div>
+          <a href="#" class="flex items-center gap-2 hover:text-white/80 transition-colors duration-200">
+            <!-- flag icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="inline-block"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 22v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Report Issue
+          </a>
+        </div>
+      </footer>
+
+    </div>
+  </main>
+</div>
 
 <script>
-  function highlightFromHash() {
-    if (!location.hash.startsWith('#L')) return;
-    const el = document.querySelector(location.hash);
-    if (!el) return;
-    el.classList.add('ring-2','ring-amber-400');
-    setTimeout(() => el.classList.remove('ring-2','ring-amber-400'), 1500);
-  }
-  highlightFromHash();
-  document.querySelectorAll('.copylink').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const no = btn.getAttribute('data-no');
-      const url = `${location.origin}${location.pathname}#L${no}`;
-      try {
-        await navigator.clipboard.writeText(url);
-        const old = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(() => (btn.textContent = old), 1200);
-      } catch (e) { prompt('Copy this link:', url); }
-    });
-  });
-  window.addEventListener('hashchange', highlightFromHash);
+  window.SONG_PAGE_DATA = {
+    lyrics: {{ lyrics_json|default:'null'|safe }},
+    selected: { punjabi: true, romanization: true, translation: false }
+  };
 </script>
+<script src="{% static 'js/song_page.js' %}" defer></script>
 {% endblock %}
