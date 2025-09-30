@@ -21,6 +21,7 @@ class Artist(models.Model):
 class Song(models.Model):
     artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
+    album = models.CharField(max_length=200, blank=True, null=True)
     year = models.IntegerField(null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True)
     is_published = models.BooleanField(default=False)

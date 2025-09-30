@@ -1,15 +1,20 @@
-from django.shortcuts import render, get_object_or_404
+# core/views.py
+from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.db.models import Q
-from .models import Artist, Song, Line
-import json
+from django.urls import reverse
 
-def home(request):
+from .models import Artist, Song, Line
+
+
+def charts(request):
+    """Homepage: Top charts / featured."""
     top_songs = (
         Song.objects.filter(is_published=True)
         .select_related("artist")
         .order_by("-year", "title")[:5]
     )
+
     featured_videos = [
         {
             "title": "Shake It Off",
@@ -22,46 +27,20 @@ def home(request):
             "thumbnail": "https://images.unsplash.com/photo-1615821430614-3d7d2685e2f2?auto=format&fit=crop&w=1200&q=60",
         },
     ]
+
     songs = (
         Song.objects.filter(is_published=True)
         .select_related("artist")
         .order_by("artist__name", "title")
     )
     artists = Artist.objects.order_by("name")
-    return render(
-        request,
-        "home.html",
-        {
-            "artists": artists,
-            "songs": songs,
-            "top_songs": top_songs,
-            "featured_videos": featured_videos,
-        },
-    )
-
-def song_detail(request, artist, song):
-    s = get_object_or_404(
-        Song.objects.select_related("artist").prefetch_related("lines"),
-        artist__slug=artist,
-        slug=song,
-        is_published=True,
-    )
-
-    # Build lyrics JSON for the template’s JS
-    lines_qs = s.lines.all().order_by("no")
-    lyrics = []
-    for ln in lines_qs:
-        lyrics.append({
-            "punjabi": [ln.original] if ln.original else [],
-            "romanization": [ln.romanized] if ln.romanized else [],
-            "translation": [ln.translation_en] if ln.translation_en else [],
-        })
 
     return render(
         request,
-        "song_detail.html",
-        {"song": s, "lyrics_json": json.dumps(lyrics, ensure_ascii=False)},
+        "charts.html",   # you already have this template
+        {"artists": artists, "songs": songs, "top_songs": top_songs, "featured_videos": featured_videos},
     )
+
 
 def search(request):
     q = (request.GET.get("q") or "").strip()
@@ -98,6 +77,32 @@ def search(request):
         },
     )
 
+
+def artists_index(request):
+    """A–Z list of all artists."""
+    artists = Artist.objects.order_by("name")
+    return render(request, "artists_index.html", {"artists": artists})
+
+
+def albums_index(request):
+    """A–Z list of album names derived from songs."""
+    # Adjust the field if your model uses a different album field name
+    album_qs = (
+        Song.objects.filter(is_published=True)
+        .exclude(album__isnull=True)
+        .exclude(album__exact="")
+        .values_list("album", flat=True)
+        .distinct()
+    )
+    albums = sorted(album_qs, key=lambda s: s.lower())
+    return render(request, "albums_index.html", {"albums": albums})
+
+
+def songs_index(request):
+    """Per your spec: clicking 'Songs' shows artists A–Z as well."""
+    return redirect(reverse("artists_index"))
+
+
 def artist_detail(request, artist):
     a = get_object_or_404(Artist, slug=artist)
     songs = (
@@ -113,3 +118,27 @@ def artist_detail(request, artist):
         "artist_detail.html",
         {"artist": a, "songs": songs, "year_min": year_min, "year_max": year_max},
     )
+
+
+def song_detail(request, artist, song):
+    import json
+    s = get_object_or_404(
+        Song.objects.select_related("artist").prefetch_related("lines"),
+        artist__slug=artist,
+        slug=song,
+        is_published=True,
+    )
+    # Prepare lyrics data for JavaScript
+    lyrics_data = [
+        {
+            "no": line.no,
+            "original": line.original,
+            "romanized": line.romanized or "",
+            "translation": line.translation_en,
+        }
+        for line in s.lines.all()
+    ]
+    return render(request, "song_detail.html", {
+        "song": s,
+        "lyrics_json": json.dumps(lyrics_data),
+    })

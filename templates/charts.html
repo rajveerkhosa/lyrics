@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Top Charts · Lyrics Library{% endblock %}
+{% block content %}
+<div class="page-container py-8 sm:py-12">
+  <!-- Hero Section -->
+  <div class="mb-8 sm:mb-12">
+    <h1 class="heading-1 mb-3">Punjabi Music Translations</h1>
+    <p class="text-lg sm:text-xl text-white/80 max-w-2xl">
+      Discover Punjabi songs with English translations, romanization, and original lyrics
+    </p>
+  </div>
+
+  <!-- Featured Artists -->
+  {% if artists %}
+  <section class="mb-12">
+    <h2 class="heading-2 mb-6">Featured Artists</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+      {% for artist in artists|slice:":10" %}
+      <a href="{% url 'artist_detail' artist.slug %}"
+         class="card-hover flex flex-col items-center text-center group">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gradient-to-br from-white/20 to-white/10 mb-3 ring-2 ring-white/20 group-hover:ring-white/40 transition-all">
+          {% if artist.image_url %}
+          <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="w-full h-full object-cover" loading="lazy">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-white/80">
+            {{ artist.name|first|upper }}
+          </div>
+          {% endif %}
+        </div>
+        <h3 class="font-semibold text-sm sm:text-base line-clamp-2">{{ artist.name }}</h3>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Popular Songs -->
+  <section>
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="heading-2">Popular Songs</h2>
+      <a href="{% url 'artists_index' %}" class="link text-sm sm:text-base">View all →</a>
+    </div>
+
+    {% if songs %}
+    <div class="card">
+      <ol class="space-y-3 sm:space-y-4">
+        {% for s in songs|slice:":20" %}
+        <li class="flex items-center gap-3 sm:gap-4 group hover:bg-white/5 -mx-2 px-2 py-2 rounded-lg transition-all">
+          <span class="text-white/40 font-medium w-8 text-right flex-shrink-0">{{ forloop.counter }}</span>
+          <div class="flex-1 min-w-0">
+            <a href="{% url 'song_detail' s.artist.slug s.slug %}"
+               class="font-medium text-base sm:text-lg hover:text-white/90 transition-colors block truncate">
+              {{ s.title }}
+            </a>
+            <a href="{% url 'artist_detail' s.artist.slug %}"
+               class="text-sm text-white/60 hover:text-white/80 transition-colors">
+              {{ s.artist.name }}
+            </a>
+          </div>
+          {% if s.year %}
+          <span class="text-sm text-white/50 flex-shrink-0 hidden sm:block">{{ s.year }}</span>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% else %}
+    <div class="card text-center py-12">
+      <p class="text-white/60 mb-4">No songs available yet</p>
+      <p class="text-sm text-white/50">Songs will appear here once added to the database</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

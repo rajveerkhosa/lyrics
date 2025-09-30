@@ -1,27 +1,14 @@
 {
   "name": "lyrics",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tw:build": "node ./node_modules/tailwindcss/lib/cli.js -i ./assets/input.css -o ./static/css/tw.css --watch"
+    "tw:build": "tailwindcss -i ./static/css/site.input.css -o ./static/css/site.css --minify",
+    "tw:watch": "tailwindcss -i ./static/css/site.input.css -o ./static/css/site.css --watch"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rajveerkhosa/lyrics.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/rajveerkhosa/lyrics/issues"
-  },
-  "homepage": "https://github.com/rajveerkhosa/lyrics#readme",
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17"
+    "tailwindcss": "^3.4.13",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20"
   }
 }

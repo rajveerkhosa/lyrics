@@ -1,9 +1,47 @@
-<header class="relative z-10">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-    <a href="/" class="text-white font-semibold text-lg tracking-tight">LyricsLib</a>
-    <nav class="flex items-center gap-4 text-sm">
-      <a href="/" class="text-white/80 hover:text-white">Home</a>
-      <a href="/search/" class="text-white/80 hover:text-white">Search</a>
+{# templates/partials/header.html #}
+<header class="fixed top-0 inset-x-0 z-50 h-14 sm:h-16 bg-black/60 backdrop-blur-sm border-b border-white/10">
+  <div class="h-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+    <div class="flex items-center gap-4 sm:gap-6 lg:gap-8">
+      <a href="{% url 'home' %}" class="font-bold text-base sm:text-lg lg:text-xl">musiclyrics.dev</a>
+      <nav class="hidden md:flex items-center gap-4 lg:gap-6">
+        <a href="{% url 'charts' %}" class="text-white/70 hover:text-white text-xs sm:text-sm">Top Charts</a>
+        <a href="{% url 'artists_index' %}" class="text-white/70 hover:text-white text-xs sm:text-sm">Artists</a>
+        <a href="{% url 'albums_index' %}" class="text-white/70 hover:text-white text-xs sm:text-sm">Albums</a>
+        <a href="{% url 'songs_index' %}" class="text-white/70 hover:text-white text-xs sm:text-sm">Songs</a>
+      </nav>
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-4">
+      <form action="{% url 'search' %}" method="get" class="hidden sm:block w-56 md:w-72 lg:w-96 relative">
+        <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M21 21l-4.3-4.3M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input name="q" value="{{ q|default:'' }}" placeholder="Search songs, artists, or lyric lines…"
+               class="w-full pl-9 pr-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30">
+      </form>
+
+      <button id="themeToggle" class="hidden sm:inline-block text-xs px-2 py-1 rounded-lg border border-white/20 hover:bg-white/10" type="button" aria-label="Toggle theme">🌙/☀️</button>
+
+      <button id="mobileBtn" class="md:hidden p-2 text-white" aria-label="Toggle menu">
+        <svg id="menuIcon" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"/>
+        </svg>
+        <svg id="closeIcon" class="h-5 w-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="mobileMenu" class="md:hidden hidden bg-black/90 backdrop-blur-sm border-t border-white/10">
+    <nav class="px-4 py-4 space-y-3">
+      <a href="{% url 'charts' %}" class="block text-white/70 hover:text-white text-sm py-2">Top Charts</a>
+      <a href="{% url 'artists_index' %}" class="block text-white/70 hover:text-white text-sm py-2">Artists</a>
+      <a href="{% url 'albums_index' %}" class="block text-white/70 hover:text-white text-sm py-2">Albums</a>
+      <a href="{% url 'songs_index' %}" class="block text-white/70 hover:text-white text-sm py-2">Songs</a>
+      <form action="{% url 'search' %}" method="get" class="pt-3 border-t border-white/10">
+        <input name="q" placeholder="Search..." class="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white placeholder-white/60">
+      </form>
     </nav>
   </div>
 </header>

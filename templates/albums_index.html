@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}All Albums · Lyrics Library{% endblock %}
+{% block content %}
+<div class="page-container py-8 sm:py-12">
+  <div class="mb-8">
+    <h1 class="heading-1 mb-3">All Albums</h1>
+    <p class="text-white/70">Browse albums featuring Punjabi music</p>
+  </div>
+
+  {% if albums %}
+  <div class="card">
+    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      {% for album in albums %}
+      <li class="p-3 sm:p-4 hover:bg-white/5 rounded-lg transition-all">
+        <h3 class="font-semibold text-base sm:text-lg">{{ album }}</h3>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% else %}
+  <div class="card text-center py-12">
+    <p class="text-white/60 mb-4">No albums available yet</p>
+    <p class="text-sm text-white/50">Albums will appear here once added to songs</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

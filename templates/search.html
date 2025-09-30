@@ -1,32 +1,82 @@
 {% extends "base.html" %}
-{% block title %}Search{% if q %}: {{ q }}{% endif %}{% endblock %}
+{% block title %}Search{% if q %}: {{ q }}{% endif %} · Lyrics Library{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold mb-2">Search{% if q %}: “{{ q }}”{% endif %}</h1>
+<div class="page-container py-8 sm:py-12">
+  <div class="mb-8">
+    <h1 class="heading-1 mb-3">
+      {% if q %}
+        Search Results for "{{ q }}"
+      {% else %}
+        Search
+      {% endif %}
+    </h1>
+    {% if q %}
+    <p class="text-white/70">Found results in songs and lyrics</p>
+    {% endif %}
+  </div>
 
-<h2 class="text-xl font-semibold mt-4 mb-1">Songs</h2>
-<ul class="list-disc ml-6">
-  {% for s in songs_page %}
-    <li>
-      <a class="text-blue-700 underline" href="{% url 'song_detail' artist=s.artist.slug song=s.slug %}">
-        {{ s.title }} — {{ s.artist.name }}
-      </a>
-    </li>
-  {% empty %}<li>No song titles matched.</li>{% endfor %}
-</ul>
+  {% if q %}
+  <!-- Songs Section -->
+  <section class="mb-8 sm:mb-12">
+    <h2 class="heading-3 mb-4 text-white/90">Songs</h2>
+    {% if songs_page %}
+    <div class="card">
+      <ul class="space-y-3">
+        {% for s in songs_page %}
+        <li class="group hover:bg-white/5 -mx-2 px-2 py-2 rounded-lg transition-all">
+          <a href="{% url 'song_detail' artist=s.artist.slug song=s.slug %}" class="block">
+            <h3 class="font-medium text-base sm:text-lg text-white group-hover:text-white/90 transition-colors">
+              {{ s.title }}
+            </h3>
+            <p class="text-sm text-white/60 group-hover:text-white/70">
+              {{ s.artist.name }}
+            </p>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% else %}
+    <div class="card text-center py-8">
+      <p class="text-white/60">No songs match your search</p>
+    </div>
+    {% endif %}
+  </section>
 
-<h2 class="text-xl font-semibold mt-6 mb-1">Lyric lines</h2>
-<ul class="space-y-2">
-  {% for ln in lines_page %}
-    <li class="border rounded p-3">
-      <div class="text-sm text-slate-500 mb-1">
-        <a class="text-blue-700 underline" href="{% url 'song_detail' artist=ln.song.artist.slug song=ln.song.slug %}#L{{ ln.no }}">
-          {{ ln.song.title }} — {{ ln.song.artist.name }} · #{{ ln.no }}
-        </a>
-      </div>
-      <p class="font-medium">{{ ln.original }}</p>
-      {% if ln.romanized %}<p class="italic">{{ ln.romanized }}</p>{% endif %}
-      <p class="text-emerald-700">{{ ln.translation_en }}</p>
-    </li>
-  {% empty %}<li>No lyric lines matched.</li>{% endfor %}
-</ul>
+  <!-- Lyric Lines Section -->
+  <section>
+    <h2 class="heading-3 mb-4 text-white/90">Lyric Lines</h2>
+    {% if lines_page %}
+    <div class="space-y-4">
+      {% for ln in lines_page %}
+      <article class="card">
+        <div class="mb-2">
+          <a href="{% url 'song_detail' artist=ln.song.artist.slug song=ln.song.slug %}#L{{ ln.no }}"
+             class="text-sm text-white/60 hover:text-white/80 transition-colors">
+            {{ ln.song.title }} — {{ ln.song.artist.name }} · Line #{{ ln.no }}
+          </a>
+        </div>
+        <div class="space-y-2">
+          <p class="font-medium text-base sm:text-lg">{{ ln.original }}</p>
+          {% if ln.romanized %}
+          <p class="italic text-white/80 text-sm sm:text-base">{{ ln.romanized }}</p>
+          {% endif %}
+          <p class="text-emerald-400 text-sm sm:text-base">{{ ln.translation_en }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center py-8">
+      <p class="text-white/60">No lyric lines match your search</p>
+    </div>
+    {% endif %}
+  </section>
+  {% else %}
+  <div class="card text-center py-12">
+    <p class="text-white/60 mb-4">Enter a search term to find songs and lyrics</p>
+    <p class="text-sm text-white/50">Use the search box in the header to get started</p>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

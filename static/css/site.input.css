@@ -1,0 +1,152 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base layer - accessibility improvements */
+@layer base {
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus visible for keyboard navigation */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-white/60;
+  }
+
+  /* Improve text rendering */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Components layer */
+@layer components {
+  /* Site-wide container */
+  .page-container {
+    @apply max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white/10 backdrop-blur-md rounded-2xl p-4 sm:p-6 shadow-xl ring-1 ring-white/20 transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:bg-white/15 hover:ring-white/30 hover:shadow-2xl;
+  }
+
+  /* Button styles */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full font-medium transition-all duration-200 min-h-[44px] focus-visible:ring-2 focus-visible:ring-white/60;
+  }
+
+  .btn-primary {
+    @apply btn bg-white/20 hover:bg-white/30 text-white border border-white/30;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white/10 hover:bg-white/20 text-white/90 border border-white/20;
+  }
+
+  /* Link styles */
+  .link {
+    @apply text-white/90 hover:text-white underline underline-offset-4 decoration-white/40 hover:decoration-white/80 transition-all duration-200;
+  }
+
+  /* Grid layouts */
+  .grid-auto-fit {
+    @apply grid gap-4 sm:gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  /* Custom scrollbar */
+  .scrollbar-custom {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Typography */
+  .heading-1 {
+    @apply text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight;
+  }
+
+  .heading-2 {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight;
+  }
+
+  .heading-3 {
+    @apply text-xl sm:text-2xl font-semibold;
+  }
+
+  /* Accessibility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Loading states */
+  .skeleton {
+    @apply animate-pulse bg-white/10 rounded;
+  }
+
+  /* Image container with aspect ratio */
+  .img-container {
+    @apply relative overflow-hidden bg-gray-800/50;
+  }
+
+  .img-container img {
+    @apply w-full h-full object-cover transition-transform duration-300;
+  }
+
+  .img-container:hover img {
+    @apply scale-105;
+  }
+}
+
+/* Utilities layer */
+@layer utilities {
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Glass morphism */
+  .glass {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .glass-dark {
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}

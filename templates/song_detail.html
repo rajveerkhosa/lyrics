@@ -1,130 +1,114 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %}{{ song.title }} by {{ song.artist.name }} · Lyrics Library{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative">
+<div class="page-container py-8 sm:py-12">
+  <!-- Song Header -->
+  <div class="mb-8 sm:mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 items-start">
+      <!-- Album Art -->
+      <div class="flex justify-center md:justify-start">
+        <div class="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-2xl overflow-hidden bg-gradient-to-br from-white/20 to-white/10 shadow-2xl ring-2 ring-white/20">
+          <div class="w-full h-full flex items-center justify-center text-6xl sm:text-7xl font-bold text-white/80">
+            {{ song.title|first|upper }}
+          </div>
+        </div>
+      </div>
 
-  <!-- Background Video -->
-  <div class="fixed inset-0 w-full h-full overflow-hidden z-0">
-    <video autoplay muted loop playsinline class="w-full h-full object-cover">
-      <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-    </video>
-    <div class="absolute inset-0 bg-black/70"></div>
+      <!-- Song Info -->
+      <div class="space-y-4 sm:space-y-6 text-center md:text-left">
+        <div>
+          <h1 class="heading-1 mb-3">{{ song.title }}</h1>
+          <p class="text-lg sm:text-xl text-white/80">
+            by
+            <a href="{% url 'artist_detail' artist=song.artist.slug %}"
+               class="link font-semibold">
+              {{ song.artist.name }}
+            </a>
+          </p>
+        </div>
+
+        <div class="text-white/70">
+          {% if song.year %}
+          <p class="mb-1">Released: {{ song.year }}</p>
+          {% endif %}
+          {% if song.album %}
+          <p>Album: {{ song.album }}</p>
+          {% endif %}
+        </div>
+
+        <!-- Share/Actions -->
+        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
+          <button onclick="window.print()"
+                  class="btn-secondary text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Print
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Header -->
-  {% include "partials/header.html" %}
-
-  <!-- Main Content -->
-  <main class="relative z-10 pt-16 sm:pt-20">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-
-      <!-- Hero -->
-      <section class="mb-8 sm:mb-12">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start">
-
-          <!-- Left - Album Cover -->
-          <div class="flex justify-center md:justify-start">
-            <div class="w-48 h-48 sm:w-56 sm:h-56 md:w-60 md:h-60 lg:w-64 lg:h-64 rounded-2xl overflow-hidden bg-gray-800 shadow-2xl">
-              <img
-                src="{{ song.album_cover|default:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?q=80&w=1080&auto=format&fit=crop' }}"
-                alt="{{ song.album_name|default:'Album cover' }}"
-                class="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
-          <!-- Right - Song Info -->
-          <div class="space-y-4 sm:space-y-6 text-center md:text-left">
-            <div>
-              <h1 class="text-white font-bold text-2xl sm:text-3xl lg:text-4xl xl:text-5xl mb-2">
-                {{ song.title }}
-              </h1>
-              <p class="text-white/80 text-lg sm:text-xl">
-                by
-                <a href="{% url 'artist_detail' artist=song.artist.slug %}"
-                   class="text-white hover:text-white/80 underline underline-offset-4 transition-colors duration-200">
-                  {{ song.artist.name }}
-                </a>
-              </p>
-            </div>
-
-            <!-- Metadata -->
-            <div class="text-white/70 text-sm sm:text-base">
-              <p>
-                {% if song.year %}Released {{ song.year }} ·{% endif %}
-                {% if song.track_no %} Track {{ song.track_no }} ·{% endif %}
-                {% if song.album_name %}
-                  on <span class="underline underline-offset-4">{{ song.album_name }}</span>
-                {% endif %}
-              </p>
-            </div>
-
-            <!-- Example tags (optional) -->
-            <div class="flex flex-wrap gap-2 justify-center md:justify-start">
-              <span class="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 text-white px-2 py-0.5 text-xs font-medium">Explicit</span>
-              <span class="inline-flex items-center justify-center rounded-md border border-white/20 bg-white/10 text-white px-2 py-0.5 text-xs font-medium">Single</span>
-            </div>
-          </div>
+  <!-- Display Toggles -->
+  <div class="mb-6 sm:mb-8">
+    <div class="card">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <label class="text-white font-medium text-sm sm:text-base">
+          Display:
+        </label>
+        <div class="flex flex-wrap gap-2 sm:gap-3">
+          <button data-toggle="punjabi"
+                  class="btn-toggle px-4 py-2 rounded-full transition-all duration-200 text-sm sm:text-base border active">
+            Punjabi
+          </button>
+          <button data-toggle="romanization"
+                  class="btn-toggle px-4 py-2 rounded-full transition-all duration-200 text-sm sm:text-base border active">
+            Romanization
+          </button>
+          <button data-toggle="translation"
+                  class="btn-toggle px-4 py-2 rounded-full transition-all duration-200 text-sm sm:text-base border">
+            English
+          </button>
         </div>
-      </section>
-
-      <!-- Toggle Section -->
-      <section class="mb-8 sm:mb-12">
-        <div class="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-white/10">
-          <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-            <label class="text-white font-medium text-sm sm:text-base">
-              Display:
-            </label>
-            <div class="flex flex-wrap gap-3">
-              <button data-toggle="punjabi" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
-              <button data-toggle="romanization" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
-              <button data-toggle="translation" class="lyr-btn px-4 py-2 rounded-full transition-all duration-200 min-h-[44px] text-sm sm:text-base"></button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Lyrics -->
-      <section class="mb-8 sm:mb-12">
-        <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6 sm:p-8 lg:p-10">
-          <h3 class="text-white font-medium text-xl sm:text-2xl mb-6 pb-3 border-b border-white/20">
-            Lyrics
-          </h3>
-          <div class="max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
-            <div id="lyrics-container" class="space-y-8"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Footer -->
-      <footer class="border-t border-white/20 pt-6 sm:pt-8">
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 text-white/60 text-xs sm:text-sm">
-          <div class="flex items-center gap-4">
-            <span>Source: Genius.com</span>
-            <a href="#" class="flex items-center gap-2 hover:text-white/80 transition-colors duration-200">
-              <!-- external link icon -->
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="inline-block"><path d="M18 13v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 3h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 14 21 3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              View Original
-            </a>
-          </div>
-          <a href="#" class="flex items-center gap-2 hover:text-white/80 transition-colors duration-200">
-            <!-- flag icon -->
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="inline-block"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 22v-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Report Issue
-          </a>
-        </div>
-      </footer>
-
+      </div>
     </div>
-  </main>
+  </div>
+
+  <!-- Lyrics -->
+  <div class="card">
+    <h2 class="heading-3 mb-6 pb-4 border-b border-white/20">Lyrics</h2>
+    <div id="lyrics-container" class="space-y-6 scrollbar-custom max-h-[600px] overflow-y-auto pr-2">
+      <!-- Lyrics will be inserted here by JavaScript -->
+    </div>
+  </div>
 </div>
 
 <script>
   window.SONG_PAGE_DATA = {
-    lyrics: {{ lyrics_json|default:'null'|safe }},
+    lyrics: {{ lyrics_json|safe }},
     selected: { punjabi: true, romanization: true, translation: false }
   };
 </script>
-<script src="{% static 'js/song_page.js' %}" defer></script>
+<script src="{% static 'js/song_page.js' %}"></script>
+
+<style>
+  .btn-toggle {
+    @apply bg-white/10 text-white/70 border-white/20;
+  }
+  .btn-toggle.active {
+    @apply bg-white/25 text-white border-white/40 font-semibold;
+  }
+  .btn-toggle:hover {
+    @apply bg-white/20 border-white/30;
+  }
+
+  @media print {
+    header, footer, .btn-secondary {
+      display: none !important;
+    }
+  }
+</style>
 {% endblock %}

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py:*)",
+      "Bash(curl:*)",
+      "Read(//private/tmp/**)",
+      "Bash(cat:*)",
+      "Bash(npx tailwindcss:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
