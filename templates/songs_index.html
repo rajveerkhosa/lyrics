@@ -1,2 +1,54 @@
-{% extends "artist_index.html" %}
-{% block title %}Songs → Artists A–Z · Lyrics Library{% endblock %}
+{% extends "base.html" %}
+{% block title %}All Songs A–Z — Lyrics Library{% endblock %}
+{% block content %}
+
+<div class="page-container py-8 sm:py-12">
+  <h1 class="heading-1 mb-6 sm:mb-8">All Songs A–Z</h1>
+
+  {% regroup songs by title.0|upper as songs_by_letter %}
+
+  <!-- Letter Navigation -->
+  <div class="mb-8 flex flex-wrap gap-2 justify-center">
+    {% for letter_group in songs_by_letter %}
+      <a href="#{{ letter_group.grouper }}"
+         class="px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition text-sm font-medium">
+        {{ letter_group.grouper }}
+      </a>
+    {% endfor %}
+  </div>
+
+  <!-- Songs by Letter -->
+  {% for letter_group in songs_by_letter %}
+    <section id="{{ letter_group.grouper }}" class="mb-10">
+      <h2 class="heading-2 mb-4 text-2xl">{{ letter_group.grouper }}</h2>
+      <div class="card">
+        <ul class="divide-y divide-white/10">
+          {% for song in letter_group.list %}
+            <li class="py-3 hover:bg-white/5 transition">
+              <a href="{% url 'song_detail' artist=song.artist.slug song=song.slug %}"
+                 class="flex items-center justify-between group">
+                <div>
+                  <span class="font-semibold group-hover:text-blue-400 transition">{{ song.title }}</span>
+                  <span class="text-white/60 text-sm ml-3">
+                    by
+                    <a href="{% url 'artist_detail' artist=song.artist.slug %}"
+                       class="hover:text-blue-400 transition">{{ song.artist.name }}</a>
+                  </span>
+                </div>
+                {% if song.year %}
+                  <span class="text-white/50 text-sm">{{ song.year }}</span>
+                {% endif %}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  {% empty %}
+    <div class="card">
+      <p class="text-white/60 text-center py-8">No songs available yet.</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

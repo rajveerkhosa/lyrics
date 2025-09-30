@@ -14,16 +14,208 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Prevent flash of unstyled content -->
+  <script>
+    // Load theme before rendering
+    const theme = localStorage.getItem('theme') || 'dark';
+    if (theme === 'light') {
+      document.documentElement.classList.add('light-mode');
+    }
+  </script>
+
+  <style>
+    /* Light mode styles */
+    html.light-mode {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --border-color: #e5e7eb;
+    }
+
+    html.light-mode body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #111827;
+    }
+
+    html.light-mode header {
+      background-color: rgba(255, 255, 255, 0.9) !important;
+      border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    html.light-mode .card,
+    html.light-mode .bg-white\/5,
+    html.light-mode .bg-white\/10,
+    html.light-mode .bg-white\/8,
+    html.light-mode .bg-black\/60 {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      border-color: rgba(0, 0, 0, 0.1) !important;
+      color: #111827 !important;
+    }
+
+    html.light-mode .text-white,
+    html.light-mode .text-white\/70,
+    html.light-mode .text-white\/80,
+    html.light-mode .text-white\/85,
+    html.light-mode .text-white\/90 {
+      color: #111827 !important;
+    }
+
+    html.light-mode .text-white\/50,
+    html.light-mode .text-white\/60 {
+      color: #4b5563 !important;
+    }
+
+    html.light-mode a:not(.bg-blue-600):not(.bg-red-600) {
+      color: #1f2937 !important;
+    }
+
+    html.light-mode a:hover {
+      color: #2563eb !important;
+    }
+
+    html.light-mode .border-white\/10,
+    html.light-mode .border-white\/20 {
+      border-color: rgba(0, 0, 0, 0.15) !important;
+    }
+
+    html.light-mode input,
+    html.light-mode textarea,
+    html.light-mode select {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      color: #111827 !important;
+      border-color: rgba(0, 0, 0, 0.2) !important;
+    }
+
+    html.light-mode input::placeholder,
+    html.light-mode textarea::placeholder {
+      color: #6b7280 !important;
+    }
+
+    /* Ensure star ratings are visible in light mode */
+    html.light-mode .star {
+      color: rgba(0, 0, 0, 0.2) !important;
+    }
+
+    html.light-mode .star.filled,
+    html.light-mode .star:hover {
+      color: #f59e0b !important;
+    }
+
+    /* Lyrics container in light mode */
+    html.light-mode #lyrics-container,
+    html.light-mode #lyrics-container * {
+      color: #111827 !important;
+    }
+
+    html.light-mode #lyrics-container .text-white\/40 {
+      color: #9ca3af !important;
+    }
+
+    html.light-mode #lyrics-container .text-white\/80 {
+      color: #374151 !important;
+    }
+
+    html.light-mode #lyrics-container .text-emerald-400 {
+      color: #059669 !important;
+    }
+
+    html.light-mode #lyrics-container .border-white\/10 {
+      border-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Button visibility in light mode */
+    html.light-mode .btn-secondary,
+    html.light-mode .btn-toggle {
+      color: #111827 !important;
+      border-color: rgba(0, 0, 0, 0.2) !important;
+    }
+
+    html.light-mode .btn-toggle.active {
+      background-color: rgba(0, 0, 0, 0.1) !important;
+      color: #111827 !important;
+    }
+
+    /* Divide lines */
+    html.light-mode .divide-white\/10 > * + * {
+      border-color: rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Messages */
+    html.light-mode .bg-green-900\/20 {
+      background-color: rgba(16, 185, 129, 0.2) !important;
+    }
+
+    html.light-mode .bg-red-900\/20 {
+      background-color: rgba(239, 68, 68, 0.2) !important;
+    }
+
+    html.light-mode .bg-blue-900\/20 {
+      background-color: rgba(59, 130, 246, 0.2) !important;
+    }
+
+    /* Yellow text for ratings */
+    html.light-mode .text-yellow-400 {
+      color: #d97706 !important;
+    }
+
+    /* Ensure headings are visible */
+    html.light-mode h1,
+    html.light-mode h2,
+    html.light-mode h3,
+    html.light-mode h4,
+    html.light-mode .heading-1,
+    html.light-mode .heading-2,
+    html.light-mode .heading-3 {
+      color: #111827 !important;
+    }
+
+    /* Ensure all paragraphs and spans are visible */
+    html.light-mode p,
+    html.light-mode span,
+    html.light-mode div {
+      color: inherit;
+    }
+
+    /* Print button and other secondary buttons */
+    html.light-mode .btn-secondary svg {
+      stroke: #111827 !important;
+    }
+
+    /* Ensure red/green text is visible */
+    html.light-mode .text-red-400,
+    html.light-mode .text-red-300 {
+      color: #dc2626 !important;
+    }
+
+    html.light-mode .text-green-300 {
+      color: #059669 !important;
+    }
+
+    html.light-mode .text-blue-400 {
+      color: #2563eb !important;
+    }
+  </style>
 </head>
-<body class="min-h-full bg-black text-white">
+<body class="min-h-full bg-black text-white transition-colors duration-200">
   {% include "partials/header.html" %}
 
   <main class="pt-14 sm:pt-16">
+    {% if messages %}
+      <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {% for message in messages %}
+          <div class="mb-3 px-4 py-3 rounded-lg border {% if message.tags == 'success' %}bg-green-900/20 border-green-700 text-green-300{% elif message.tags == 'error' %}bg-red-900/20 border-red-700 text-red-300{% else %}bg-blue-900/20 border-blue-700 text-blue-300{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
     {% block content %}{% endblock %}
   </main>
 
   <footer class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm text-white/60">
-    Punjabi → English demo • <a href="/sitemap.xml" class="underline hover:no-underline">sitemap</a>
+    <!-- Footer content can be added here -->
   </footer>
 
   <script>
@@ -39,12 +231,33 @@
     });
 
     // Theme toggle
-    const root = document.documentElement;
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark') root.classList.add('dark');
-    document.getElementById('themeToggle')?.addEventListener('click', () => {
-      root.classList.toggle('dark');
-      localStorage.setItem('theme', root.classList.contains('dark') ? 'dark' : 'light');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.querySelector('.theme-icon');
+    const html = document.documentElement;
+
+    // Initialize theme icon
+    function updateThemeIcon() {
+      const isLight = html.classList.contains('light-mode');
+      if (themeIcon) {
+        themeIcon.textContent = isLight ? '☀️' : '🌙';
+      }
+    }
+
+    updateThemeIcon();
+
+    // Toggle theme on button click
+    themeToggle?.addEventListener('click', () => {
+      const isLight = html.classList.contains('light-mode');
+
+      if (isLight) {
+        html.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        html.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+      }
+
+      updateThemeIcon();
     });
   </script>
 </body>

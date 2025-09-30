@@ -5,6 +5,9 @@ __pycache__/
 db.sqlite3
 /media/
 staticfiles/           # production collectstatic output
+*.log
+*.pot
+*.pyc
 
 # --- Virtual env & env files ---
 .venv/
@@ -21,3 +24,6 @@ dist/
 # --- OS/Editor ---
 .DS_Store
 .vscode/
+
+# --- Claude---
+.claude/

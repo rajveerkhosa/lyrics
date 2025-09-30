@@ -1,10 +1,14 @@
 # core/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Avg
 from django.urls import reverse
+from django.contrib.auth import login, logout, authenticate
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
-from .models import Artist, Song, Line
+from .models import Artist, Song, Line, UserProfile, SongComment, ArtistComment, SongRating, ArtistRating
+from .forms import SignUpForm, LoginForm, SongCommentForm, ArtistCommentForm, SongRatingForm, ArtistRatingForm
 
 
 def charts(request):
@@ -99,8 +103,13 @@ def albums_index(request):
 
 
 def songs_index(request):
-    """Per your spec: clicking 'Songs' shows artists A–Z as well."""
-    return redirect(reverse("artists_index"))
+    """A-Z list of all published songs."""
+    songs = (
+        Song.objects.filter(is_published=True)
+        .select_related("artist")
+        .order_by("title")
+    )
+    return render(request, "songs_index.html", {"songs": songs})
 
 
 def artist_detail(request, artist):
@@ -113,10 +122,57 @@ def artist_detail(request, artist):
     years = list(songs.exclude(year__isnull=True).values_list("year", flat=True))
     year_min, year_max = (min(years), max(years)) if years else (None, None)
 
+    # Get comments and ratings
+    comments = a.comments.select_related('user').all()
+    avg_rating = a.ratings.aggregate(Avg('rating'))['rating__avg']
+    user_rating = None
+    is_favorite = False
+
+    if request.user.is_authenticated:
+        user_rating = a.ratings.filter(user=request.user).first()
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        is_favorite = profile.favorite_artists.filter(id=a.id).exists()
+
+    # Handle comment submission
+    if request.method == 'POST' and request.user.is_authenticated:
+        if 'comment_text' in request.POST:
+            comment_form = ArtistCommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.artist = a
+                comment.user = request.user
+                comment.save()
+                messages.success(request, 'Comment added!')
+                return redirect('artist_detail', artist=artist)
+        elif 'rating' in request.POST:
+            rating_form = ArtistRatingForm(request.POST)
+            if rating_form.is_valid():
+                rating, created = ArtistRating.objects.update_or_create(
+                    artist=a,
+                    user=request.user,
+                    defaults={'rating': rating_form.cleaned_data['rating']}
+                )
+                messages.success(request, 'Rating updated!' if not created else 'Rating added!')
+                return redirect('artist_detail', artist=artist)
+
+    comment_form = ArtistCommentForm()
+    rating_form = ArtistRatingForm(instance=user_rating)
+
     return render(
         request,
         "artist_detail.html",
-        {"artist": a, "songs": songs, "year_min": year_min, "year_max": year_max},
+        {
+            "artist": a,
+            "songs": songs,
+            "year_min": year_min,
+            "year_max": year_max,
+            "comments": comments,
+            "comment_form": comment_form,
+            "rating_form": rating_form,
+            "avg_rating": avg_rating,
+            "user_rating": user_rating,
+            "is_favorite": is_favorite,
+        },
     )
 
 
@@ -128,6 +184,43 @@ def song_detail(request, artist, song):
         slug=song,
         is_published=True,
     )
+
+    # Get comments and ratings
+    comments = s.comments.select_related('user').all()
+    avg_rating = s.ratings.aggregate(Avg('rating'))['rating__avg']
+    user_rating = None
+    is_favorite = False
+
+    if request.user.is_authenticated:
+        user_rating = s.ratings.filter(user=request.user).first()
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        is_favorite = profile.favorite_songs.filter(id=s.id).exists()
+
+    # Handle comment submission
+    if request.method == 'POST' and request.user.is_authenticated:
+        if 'comment_text' in request.POST:
+            comment_form = SongCommentForm(request.POST)
+            if comment_form.is_valid():
+                comment = comment_form.save(commit=False)
+                comment.song = s
+                comment.user = request.user
+                comment.save()
+                messages.success(request, 'Comment added!')
+                return redirect('song_detail', artist=artist, song=song)
+        elif 'rating' in request.POST:
+            rating_form = SongRatingForm(request.POST)
+            if rating_form.is_valid():
+                rating, created = SongRating.objects.update_or_create(
+                    song=s,
+                    user=request.user,
+                    defaults={'rating': rating_form.cleaned_data['rating']}
+                )
+                messages.success(request, 'Rating updated!' if not created else 'Rating added!')
+                return redirect('song_detail', artist=artist, song=song)
+
+    comment_form = SongCommentForm()
+    rating_form = SongRatingForm(instance=user_rating)
+
     # Prepare lyrics data for JavaScript
     lyrics_data = [
         {
@@ -141,4 +234,98 @@ def song_detail(request, artist, song):
     return render(request, "song_detail.html", {
         "song": s,
         "lyrics_json": json.dumps(lyrics_data),
+        "comments": comments,
+        "comment_form": comment_form,
+        "rating_form": rating_form,
+        "avg_rating": avg_rating,
+        "user_rating": user_rating,
+        "is_favorite": is_favorite,
     })
+
+
+# Authentication views
+def signup_view(request):
+    if request.user.is_authenticated:
+        return redirect('charts')
+
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            UserProfile.objects.create(user=user)
+            login(request, user)
+            messages.success(request, f'Welcome {user.username}! Your account has been created.')
+            return redirect('charts')
+    else:
+        form = SignUpForm()
+
+    return render(request, 'signup.html', {'form': form})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('charts')
+
+    if request.method == 'POST':
+        form = LoginForm(data=request.POST)
+        if form.is_valid():
+            username = form.cleaned_data.get('username')
+            password = form.cleaned_data.get('password')
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                login(request, user)
+                messages.success(request, f'Welcome back, {username}!')
+                return redirect(request.GET.get('next', 'charts'))
+    else:
+        form = LoginForm()
+
+    return render(request, 'login.html', {'form': form})
+
+
+def logout_view(request):
+    logout(request)
+    messages.info(request, 'You have been logged out.')
+    return redirect('charts')
+
+
+@login_required
+def profile_view(request):
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    favorite_songs = profile.favorite_songs.select_related('artist').all()
+    favorite_artists = profile.favorite_artists.all()
+
+    return render(request, 'profile.html', {
+        'profile': profile,
+        'favorite_songs': favorite_songs,
+        'favorite_artists': favorite_artists,
+    })
+
+
+@login_required
+def toggle_favorite_song(request, song_id):
+    song = get_object_or_404(Song, id=song_id)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if profile.favorite_songs.filter(id=song_id).exists():
+        profile.favorite_songs.remove(song)
+        messages.info(request, f'{song.title} removed from favorites.')
+    else:
+        profile.favorite_songs.add(song)
+        messages.success(request, f'{song.title} added to favorites!')
+
+    return redirect(request.META.get('HTTP_REFERER', 'charts'))
+
+
+@login_required
+def toggle_favorite_artist(request, artist_id):
+    artist = get_object_or_404(Artist, id=artist_id)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+
+    if profile.favorite_artists.filter(id=artist_id).exists():
+        profile.favorite_artists.remove(artist)
+        messages.info(request, f'{artist.name} removed from favorites.')
+    else:
+        profile.favorite_artists.add(artist)
+        messages.success(request, f'{artist.name} added to favorites!')
+
+    return redirect(request.META.get('HTTP_REFERER', 'charts'))

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Lyrics Library{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto px-4 py-12">
+  <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-8">
+    <h1 class="text-3xl font-bold mb-6">Login</h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="px-4 py-3 rounded-lg bg-red-900/20 border border-red-700 text-red-300">
+          {% for error in form.non_field_errors %}
+            {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium mb-2">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <p class="mt-1 text-sm text-red-400">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <label for="{{ form.password.id_for_label }}" class="block text-sm font-medium mb-2">Password</label>
+        {{ form.password }}
+        {% if form.password.errors %}
+          <p class="mt-1 text-sm text-red-400">{{ form.password.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition">
+        Login
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-white/60 text-sm">
+      Don't have an account? <a href="{% url 'signup' %}" class="text-blue-400 hover:text-blue-300">Sign up</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

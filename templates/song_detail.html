@@ -38,6 +38,25 @@
           {% endif %}
         </div>
 
+        <!-- Rating and Favorite -->
+        <div class="space-y-3">
+          {% if avg_rating %}
+          <p class="text-white/80">Average Rating: <span class="text-yellow-400 font-semibold">{{ avg_rating|floatformat:1 }}/5.0</span></p>
+          {% endif %}
+
+          {% if user.is_authenticated %}
+          <div class="flex flex-wrap gap-3 items-center">
+            <form method="post" class="inline-block">
+              {% csrf_token %}
+              <button type="submit" name="favorite" formaction="{% url 'toggle_favorite_song' song.id %}"
+                      class="btn-secondary text-sm {% if is_favorite %}text-red-400{% endif %}">
+                {% if is_favorite %}♥ Favorited{% else %}♡ Add to Favorites{% endif %}
+              </button>
+            </form>
+          </div>
+          {% endif %}
+        </div>
+
         <!-- Share/Actions -->
         <div class="flex flex-wrap gap-3 justify-center md:justify-start">
           <button onclick="window.print()"
@@ -84,6 +103,64 @@
       <!-- Lyrics will be inserted here by JavaScript -->
     </div>
   </div>
+
+  <!-- Ratings Section -->
+  {% if user.is_authenticated %}
+  <div class="card mt-8">
+    <h2 class="heading-3 mb-4">Rate This Song</h2>
+    <form method="post" id="ratingForm" class="space-y-4">
+      {% csrf_token %}
+      <div class="flex gap-4 items-center">
+        <div class="star-rating" data-rating="{{ user_rating.rating|default:0 }}">
+          <input type="hidden" name="rating" id="ratingInput" value="{{ user_rating.rating|default:0 }}">
+          <span class="star" data-value="1">★</span>
+          <span class="star" data-value="2">★</span>
+          <span class="star" data-value="3">★</span>
+          <span class="star" data-value="4">★</span>
+          <span class="star" data-value="5">★</span>
+        </div>
+        <button type="submit" class="btn-secondary text-sm">Submit Rating</button>
+      </div>
+      {% if user_rating %}
+      <p class="text-sm text-white/60">Your current rating: <span id="currentRating">{{ user_rating.rating }}</span>/5</p>
+      {% endif %}
+    </form>
+  </div>
+  {% endif %}
+
+  <!-- Comments Section -->
+  <div class="card mt-8">
+    <h2 class="heading-3 mb-6">Comments</h2>
+
+    {% if user.is_authenticated %}
+    <form method="post" class="mb-8">
+      {% csrf_token %}
+      {{ comment_form.text }}
+      <input type="hidden" name="comment_text" value="1">
+      <button type="submit" class="mt-3 btn-secondary text-sm">Post Comment</button>
+    </form>
+    {% else %}
+    <p class="mb-8 text-white/60">
+      <a href="{% url 'login' %}?next={{ request.path }}" class="link">Login</a> to leave a comment
+    </p>
+    {% endif %}
+
+    {% if comments %}
+    <div class="space-y-4">
+      {% for comment in comments %}
+      <div class="p-4 bg-white/5 rounded-lg border border-white/10">
+        <div class="flex justify-between items-start mb-2">
+          <span class="font-semibold">{{ comment.user.username }}</span>
+          <span class="text-xs text-white/50">{{ comment.created_at|timesince }} ago</span>
+        </div>
+        <p class="text-white/80">{{ comment.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-white/60">No comments yet. Be the first to comment!</p>
+    {% endif %}
+  </div>
 </div>
 
 <script>
@@ -105,10 +182,78 @@
     @apply bg-white/20 border-white/30;
   }
 
+  .star-rating {
+    display: inline-flex;
+    gap: 0.25rem;
+    font-size: 2rem;
+    cursor: pointer;
+  }
+  .star {
+    color: rgba(255, 255, 255, 0.2);
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .star.filled {
+    color: #fbbf24;
+  }
+  .star:hover {
+    color: #fbbf24;
+  }
+
   @media print {
     header, footer, .btn-secondary {
       display: none !important;
     }
   }
 </style>
+
+<script>
+  // Star rating functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const starRating = document.querySelector('.star-rating');
+    if (!starRating) return;
+
+    const stars = starRating.querySelectorAll('.star');
+    const ratingInput = document.getElementById('ratingInput');
+    const currentRatingSpan = document.getElementById('currentRating');
+    let currentRating = parseInt(starRating.dataset.rating) || 0;
+
+    // Initialize stars based on current rating
+    function updateStars(rating) {
+      stars.forEach((star, index) => {
+        if (index < rating) {
+          star.classList.add('filled');
+        } else {
+          star.classList.remove('filled');
+        }
+      });
+    }
+
+    updateStars(currentRating);
+
+    // Hover effect
+    stars.forEach((star, index) => {
+      star.addEventListener('mouseenter', () => {
+        updateStars(index + 1);
+      });
+    });
+
+    // Reset to current rating on mouse leave
+    starRating.addEventListener('mouseleave', () => {
+      updateStars(currentRating);
+    });
+
+    // Click to select rating
+    stars.forEach((star, index) => {
+      star.addEventListener('click', () => {
+        currentRating = index + 1;
+        ratingInput.value = currentRating;
+        updateStars(currentRating);
+        if (currentRatingSpan) {
+          currentRatingSpan.textContent = currentRating;
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

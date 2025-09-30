@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }}'s Profile - Lyrics Library{% endblock %}
+
+{% block content %}
+<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-2">{{ user.username }}</h1>
+    <p class="text-white/60">Member since {{ profile.created_at|date:"F Y" }}</p>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Favorite Songs -->
+    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+      <h2 class="text-2xl font-bold mb-4">Favorite Songs</h2>
+      {% if favorite_songs %}
+        <div class="space-y-3">
+          {% for song in favorite_songs %}
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+              <div>
+                <a href="{% url 'song_detail' artist=song.artist.slug song=song.slug %}" class="font-semibold hover:text-blue-400">
+                  {{ song.title }}
+                </a>
+                <p class="text-sm text-white/60">{{ song.artist.name }}</p>
+              </div>
+              <form method="post" action="{% url 'toggle_favorite_song' song.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-red-400 hover:text-red-300 text-xl">♥</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-white/60">No favorite songs yet. Start adding some!</p>
+      {% endif %}
+    </div>
+
+    <!-- Favorite Artists -->
+    <div class="bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 p-6">
+      <h2 class="text-2xl font-bold mb-4">Favorite Artists</h2>
+      {% if favorite_artists %}
+        <div class="space-y-3">
+          {% for artist in favorite_artists %}
+            <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+              <a href="{% url 'artist_detail' artist=artist.slug %}" class="font-semibold hover:text-blue-400">
+                {{ artist.name }}
+              </a>
+              <form method="post" action="{% url 'toggle_favorite_artist' artist.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-red-400 hover:text-red-300 text-xl">♥</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-white/60">No favorite artists yet. Start adding some!</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

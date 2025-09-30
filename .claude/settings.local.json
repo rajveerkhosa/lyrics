@@ -5,7 +5,9 @@
       "Bash(curl:*)",
       "Read(//private/tmp/**)",
       "Bash(cat:*)",
-      "Bash(npx tailwindcss:*)"
+      "Bash(npx tailwindcss:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)"
     ],
     "deny": [],
     "ask": []
