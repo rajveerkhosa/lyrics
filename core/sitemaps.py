@@ -1,6 +1,6 @@
 from django.contrib.sitemaps import Sitemap
 from django.urls import reverse
-from .models import Artist, Song
+from .models import Artist, Song, Album
 
 
 class ArtistSitemap(Sitemap):
@@ -12,6 +12,20 @@ class ArtistSitemap(Sitemap):
 
     def location(self, obj):
         return reverse("artist_detail", kwargs={"artist": obj.slug})
+
+
+class AlbumSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.7
+
+    def items(self):
+        return Album.objects.select_related("artist").all()
+
+    def location(self, obj):
+        return reverse(
+            "album_detail",
+            kwargs={"artist": obj.artist.slug, "album": obj.slug},
+        )
 
 
 class SongSitemap(Sitemap):

@@ -20,10 +20,29 @@ class Artist(models.Model):
         return self.name
 
 
-class Song(models.Model):
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE)
+class Album(models.Model):
     title = models.CharField(max_length=200)
-    album = models.CharField(max_length=200, blank=True, null=True)
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='albums')
+    slug = models.SlugField(unique=True, blank=True)
+    year = models.IntegerField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(f"{self.artist.name}-{self.title}")
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.title} ({self.artist.name})"
+
+    class Meta:
+        unique_together = ('title', 'artist')
+
+
+class Song(models.Model):
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='main_songs')
+    title = models.CharField(max_length=200)
+    album = models.ForeignKey(Album, on_delete=models.SET_NULL, blank=True, null=True, related_name='songs')
+    featured_artists = models.ManyToManyField(Artist, blank=True, related_name='featured_songs')
     year = models.IntegerField(null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True)
     is_published = models.BooleanField(default=False)

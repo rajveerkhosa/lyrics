@@ -33,6 +33,11 @@
                     by
                     <a href="{% url 'artist_detail' artist=song.artist.slug %}"
                        class="hover:text-blue-400 transition">{{ song.artist.name }}</a>
+                    {% if song.album %}
+                      •
+                      <a href="{% url 'album_detail' artist=song.artist.slug album=song.album.slug %}"
+                         class="hover:text-emerald-400 transition">{{ song.album.title }}</a>
+                    {% endif %}
                   </span>
                 </div>
                 {% if song.year %}

@@ -1,48 +1,111 @@
 # core/views.py
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Count
 from django.urls import reverse
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.utils import timezone
+from datetime import timedelta
 
-from .models import Artist, Song, Line, UserProfile, SongComment, ArtistComment, SongRating, ArtistRating
+from .models import Artist, Album, Song, Line, UserProfile, SongComment, ArtistComment, SongRating, ArtistRating, PageView
 from .forms import SignUpForm, LoginForm, SongCommentForm, ArtistCommentForm, SongRatingForm, ArtistRatingForm
 
 
 def charts(request):
-    """Homepage: Top charts / featured."""
-    top_songs = (
-        Song.objects.filter(is_published=True)
-        .select_related("artist")
-        .order_by("-year", "title")[:5]
+    """Homepage: Top charts / featured based on weekly views."""
+    # Get views from the last 7 days
+    seven_days_ago = timezone.now() - timedelta(days=7)
+
+    # Get top songs by weekly views
+    weekly_song_views = (
+        PageView.objects.filter(
+            content_type='song',
+            viewed_at__gte=seven_days_ago
+        )
+        .values('url')
+        .annotate(view_count=Count('id'))
+        .order_by('-view_count')[:10]
     )
 
-    featured_videos = [
-        {
-            "title": "Shake It Off",
-            "artist": "Taylor Swift",
-            "thumbnail": "https://images.unsplash.com/photo-1694878982098-1cec80d96eca?auto=format&fit=crop&w=1200&q=60",
-        },
-        {
-            "title": "Blinding Lights",
-            "artist": "The Weeknd",
-            "thumbnail": "https://images.unsplash.com/photo-1615821430614-3d7d2685e2f2?auto=format&fit=crop&w=1200&q=60",
-        },
-    ]
+    # Extract song slugs from URLs and get Song objects
+    top_songs = []
+    for view_data in weekly_song_views:
+        url = view_data['url']
+        # URL format: /a/<artist-slug>/<song-slug>/
+        parts = url.strip('/').split('/')
+        if len(parts) >= 3 and parts[0] == 'a':
+            artist_slug = parts[1]
+            song_slug = parts[2]
+            try:
+                song = Song.objects.select_related('artist', 'album').get(
+                    artist__slug=artist_slug,
+                    slug=song_slug,
+                    is_published=True
+                )
+                song.weekly_views = view_data['view_count']
+                top_songs.append(song)
+            except Song.DoesNotExist:
+                pass
+
+    # Get top artists by weekly views
+    weekly_artist_views = (
+        PageView.objects.filter(
+            content_type='artist',
+            viewed_at__gte=seven_days_ago
+        )
+        .values('url')
+        .annotate(view_count=Count('id'))
+        .order_by('-view_count')[:6]
+    )
+
+    # Extract artist slugs from URLs and get Artist objects
+    featured_artists = []
+    for view_data in weekly_artist_views:
+        url = view_data['url']
+        # URL format: /a/<artist-slug>/
+        parts = url.strip('/').split('/')
+        if len(parts) >= 2 and parts[0] == 'a':
+            artist_slug = parts[1]
+            try:
+                artist = Artist.objects.get(slug=artist_slug)
+                artist.weekly_views = view_data['view_count']
+                featured_artists.append(artist)
+            except Artist.DoesNotExist:
+                pass
+
+    # Fallback: if no views yet, show recent songs and all artists
+    if not top_songs:
+        top_songs = list(
+            Song.objects.filter(is_published=True)
+            .select_related("artist", "album")
+            .order_by("-year", "title")[:10]
+        )
+        for song in top_songs:
+            song.weekly_views = 0
+
+    if not featured_artists:
+        featured_artists = list(Artist.objects.order_by("name")[:6])
+        for artist in featured_artists:
+            artist.weekly_views = 0
 
     songs = (
         Song.objects.filter(is_published=True)
-        .select_related("artist")
+        .select_related("artist", "album")
         .order_by("artist__name", "title")
     )
     artists = Artist.objects.order_by("name")
 
     return render(
         request,
-        "charts.html",   # you already have this template
-        {"artists": artists, "songs": songs, "top_songs": top_songs, "featured_videos": featured_videos},
+        "charts.html",
+        {
+            "artists": artists,
+            "songs": songs,
+            "top_songs": top_songs,
+            "featured_artists": featured_artists,
+        },
     )
 
 
@@ -89,16 +152,8 @@ def artists_index(request):
 
 
 def albums_index(request):
-    """A–Z list of album names derived from songs."""
-    # Adjust the field if your model uses a different album field name
-    album_qs = (
-        Song.objects.filter(is_published=True)
-        .exclude(album__isnull=True)
-        .exclude(album__exact="")
-        .values_list("album", flat=True)
-        .distinct()
-    )
-    albums = sorted(album_qs, key=lambda s: s.lower())
+    """A–Z list of albums."""
+    albums = Album.objects.select_related('artist').order_by('title')
     return render(request, "albums_index.html", {"albums": albums})
 
 
@@ -106,7 +161,7 @@ def songs_index(request):
     """A-Z list of all published songs."""
     songs = (
         Song.objects.filter(is_published=True)
-        .select_related("artist")
+        .select_related("artist", "album")
         .order_by("title")
     )
     return render(request, "songs_index.html", {"songs": songs})
@@ -114,12 +169,25 @@ def songs_index(request):
 
 def artist_detail(request, artist):
     a = get_object_or_404(Artist, slug=artist)
-    songs = (
+    # Get songs where this artist is the main artist
+    main_songs = (
         Song.objects.filter(artist=a, is_published=True)
         .select_related("artist")
         .order_by("-year", "title")
     )
-    years = list(songs.exclude(year__isnull=True).values_list("year", flat=True))
+    # Get songs where this artist is featured
+    featured_songs = (
+        Song.objects.filter(featured_artists=a, is_published=True)
+        .select_related("artist")
+        .order_by("-year", "title")
+    )
+    # Combine both querysets
+    from itertools import chain
+    songs = list(chain(main_songs, featured_songs))
+    # Sort by year and title
+    songs = sorted(songs, key=lambda s: (-(s.year or 0), s.title))
+
+    years = [s.year for s in songs if s.year]
     year_min, year_max = (min(years), max(years)) if years else (None, None)
 
     # Get comments and ratings
@@ -158,6 +226,9 @@ def artist_detail(request, artist):
     comment_form = ArtistCommentForm()
     rating_form = ArtistRatingForm(instance=user_rating)
 
+    # Get view count for this artist
+    artist_views = PageView.objects.filter(content_type='artist', url=request.path).count()
+
     return render(
         request,
         "artist_detail.html",
@@ -172,14 +243,34 @@ def artist_detail(request, artist):
             "avg_rating": avg_rating,
             "user_rating": user_rating,
             "is_favorite": is_favorite,
+            "view_count": artist_views,
         },
     )
+
+
+def album_detail(request, artist, album):
+    """Album detail page showing all songs in the album."""
+    a = get_object_or_404(Artist, slug=artist)
+    alb = get_object_or_404(Album, slug=album, artist=a)
+
+    # Get all songs in this album
+    songs = Song.objects.filter(album=alb, is_published=True).select_related('artist').order_by('title')
+
+    # Get view count for this album
+    album_views = PageView.objects.filter(content_type='album', url=request.path).count()
+
+    return render(request, 'album_detail.html', {
+        'album': alb,
+        'artist': a,
+        'songs': songs,
+        'view_count': album_views,
+    })
 
 
 def song_detail(request, artist, song):
     import json
     s = get_object_or_404(
-        Song.objects.select_related("artist").prefetch_related("lines"),
+        Song.objects.select_related("artist", "album").prefetch_related("lines", "featured_artists"),
         artist__slug=artist,
         slug=song,
         is_published=True,
@@ -231,6 +322,10 @@ def song_detail(request, artist, song):
         }
         for line in s.lines.all()
     ]
+
+    # Get view count for this song
+    song_views = PageView.objects.filter(content_type='song', url=request.path).count()
+
     return render(request, "song_detail.html", {
         "song": s,
         "lyrics_json": json.dumps(lyrics_data),
@@ -240,6 +335,7 @@ def song_detail(request, artist, song):
         "avg_rating": avg_rating,
         "user_rating": user_rating,
         "is_favorite": is_favorite,
+        "view_count": song_views,
     })
 
 

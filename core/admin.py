@@ -3,8 +3,11 @@ from django.db.models import Count, Q
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import timedelta
+from django import forms
+import csv
+import io
 from .models import (
-    Artist, Song, Line, UserProfile,
+    Artist, Album, Song, Line, UserProfile,
     SongComment, ArtistComment, SongRating, ArtistRating,
     PageView, SiteStats
 )
@@ -15,6 +18,73 @@ class LineInline(admin.TabularInline):
     extra = 0
 
 
+class SongAdminForm(forms.ModelForm):
+    csv_lyrics = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'rows': 10,
+            'cols': 80,
+            'placeholder': 'Paste CSV lyrics here (format: original,romanized,translation_en)\nLeave romanized empty if not needed.\nExample:\n가사1,gasaone,Lyrics 1\n가사2,,Lyrics 2'
+        }),
+        help_text='Paste CSV formatted lyrics. Format: original,romanized,translation_en (one line per row). This will replace all existing lines.',
+        label='CSV Lyrics Import'
+    )
+
+    new_album_title = forms.CharField(
+        required=False,
+        max_length=200,
+        help_text='Enter a new album name if the album doesn\'t exist yet',
+        label='Or create new album'
+    )
+
+    class Meta:
+        model = Song
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Show existing lines as CSV if editing
+        if self.instance.pk:
+            lines = self.instance.lines.all().order_by('no')
+            if lines:
+                csv_data = []
+                for line in lines:
+                    csv_data.append(f'{line.original},{line.romanized or ""},{line.translation_en}')
+                self.fields['csv_lyrics'].initial = '\n'.join(csv_data)
+
+            # Filter albums by the selected artist
+            if self.instance.artist:
+                self.fields['album'].queryset = Album.objects.filter(artist=self.instance.artist)
+            else:
+                self.fields['album'].queryset = Album.objects.all()
+        else:
+            # For new songs, show all albums initially (JavaScript will filter)
+            self.fields['album'].queryset = Album.objects.all()
+            # Make album not required so the field shows even if empty
+            self.fields['album'].required = False
+
+        # Add help text for album field
+        self.fields['album'].help_text = 'First select an artist above, then choose an album or create a new one below'
+        self.fields['album'].widget.attrs['data-depends-on'] = 'artist'
+
+    def clean(self):
+        cleaned_data = super().clean()
+        artist = cleaned_data.get('artist')
+        album = cleaned_data.get('album')
+        new_album_title = cleaned_data.get('new_album_title', '').strip()
+
+        # If new album title is provided, create the album
+        if new_album_title and artist:
+            album, created = Album.objects.get_or_create(
+                title=new_album_title,
+                artist=artist,
+                defaults={'year': cleaned_data.get('year')}
+            )
+            cleaned_data['album'] = album
+
+        return cleaned_data
+
+
 @admin.register(Artist)
 class ArtistAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -22,13 +92,67 @@ class ArtistAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("name",)}
 
 
-@admin.register(Song)
-class SongAdmin(admin.ModelAdmin):
-    list_display = ("title", "artist", "year", "is_published")
-    list_filter = ("artist", "is_published", "year")
+@admin.register(Album)
+class AlbumAdmin(admin.ModelAdmin):
+    list_display = ("title", "artist", "year")
+    list_filter = ("artist", "year")
     search_fields = ("title", "artist__name")
     prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(Song)
+class SongAdmin(admin.ModelAdmin):
+    form = SongAdminForm
+    list_display = ("title", "artist", "album", "year", "is_published")
+    list_filter = ("artist", "album", "is_published", "year")
+    search_fields = ("title", "artist__name", "album__title")
+    prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ("featured_artists",)
     inlines = [LineInline]
+    fields = ("artist", "title", "album", "new_album_title", "year", "featured_artists", "slug", "is_published", "csv_lyrics")
+
+    class Media:
+        js = ('admin/js/song_admin.js',)
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('get-albums/<int:artist_id>/', self.admin_site.admin_view(self.get_albums_for_artist), name='core_song_get_albums'),
+        ]
+        return custom_urls + urls
+
+    def get_albums_for_artist(self, request, artist_id):
+        from django.http import JsonResponse
+        albums = Album.objects.filter(artist_id=artist_id).values('id', 'title')
+        return JsonResponse(list(albums), safe=False)
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+
+        # Process CSV lyrics if provided
+        csv_lyrics = form.cleaned_data.get('csv_lyrics', '').strip()
+        if csv_lyrics:
+            # Delete existing lines
+            obj.lines.all().delete()
+
+            # Parse and create new lines
+            csv_reader = csv.reader(io.StringIO(csv_lyrics))
+            line_no = 1
+            for row in csv_reader:
+                if len(row) >= 2:
+                    original = row[0].strip()
+                    romanized = row[1].strip() if len(row) > 1 and row[1].strip() else None
+                    translation_en = row[2].strip() if len(row) > 2 else ''
+
+                    Line.objects.create(
+                        song=obj,
+                        no=line_no,
+                        original=original,
+                        romanized=romanized,
+                        translation_en=translation_en
+                    )
+                    line_no += 1
 
 
 @admin.register(UserProfile)

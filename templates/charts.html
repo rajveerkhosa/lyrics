@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Top Charts · Lyrics Library{% endblock %}
+{% block title %}Top Charts This Week · Lyrics Library{% endblock %}
 {% block content %}
 <div class="page-container py-8 sm:py-12">
   <!-- Hero Section -->
@@ -11,14 +11,17 @@
   </div>
 
   <!-- Featured Artists -->
-  {% if artists %}
+  {% if featured_artists %}
   <section class="mb-12">
-    <h2 class="heading-2 mb-6">Featured Artists</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-      {% for artist in artists|slice:":10" %}
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="heading-2">Featured Artists This Week</h2>
+      <a href="{% url 'artists_index' %}" class="link text-sm sm:text-base">View all →</a>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6">
+      {% for artist in featured_artists %}
       <a href="{% url 'artist_detail' artist.slug %}"
-         class="card-hover flex flex-col items-center text-center group">
-        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gradient-to-br from-white/20 to-white/10 mb-3 ring-2 ring-white/20 group-hover:ring-white/40 transition-all">
+         class="card-hover flex flex-col items-center text-center group relative">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 mb-3 ring-2 ring-white/20 group-hover:ring-emerald-400/60 transition-all">
           {% if artist.image_url %}
           <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="w-full h-full object-cover" loading="lazy">
           {% else %}
@@ -27,38 +30,51 @@
           </div>
           {% endif %}
         </div>
-        <h3 class="font-semibold text-sm sm:text-base line-clamp-2">{{ artist.name }}</h3>
+        <h3 class="font-semibold text-sm sm:text-base line-clamp-2 group-hover:text-emerald-400 transition">{{ artist.name }}</h3>
       </a>
       {% endfor %}
     </div>
   </section>
   {% endif %}
 
-  <!-- Popular Songs -->
+  <!-- Top Songs This Week -->
   <section>
     <div class="flex items-center justify-between mb-6">
-      <h2 class="heading-2">Popular Songs</h2>
-      <a href="{% url 'artists_index' %}" class="link text-sm sm:text-base">View all →</a>
+      <h2 class="heading-2">Top Songs This Week</h2>
+      <a href="{% url 'songs_index' %}" class="link text-sm sm:text-base">View all →</a>
     </div>
 
-    {% if songs %}
+    {% if top_songs %}
     <div class="card">
       <ol class="space-y-3 sm:space-y-4">
-        {% for s in songs|slice:":20" %}
+        {% for s in top_songs %}
         <li class="flex items-center gap-3 sm:gap-4 group hover:bg-white/5 -mx-2 px-2 py-2 rounded-lg transition-all">
-          <span class="text-white/40 font-medium w-8 text-right flex-shrink-0">{{ forloop.counter }}</span>
+          <span class="text-2xl font-bold w-10 text-right flex-shrink-0 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+            {{ forloop.counter }}
+          </span>
           <div class="flex-1 min-w-0">
             <a href="{% url 'song_detail' s.artist.slug s.slug %}"
-               class="font-medium text-base sm:text-lg hover:text-white/90 transition-colors block truncate">
+               class="font-semibold text-base sm:text-lg hover:text-emerald-400 transition-colors block truncate">
               {{ s.title }}
             </a>
-            <a href="{% url 'artist_detail' s.artist.slug %}"
-               class="text-sm text-white/60 hover:text-white/80 transition-colors">
-              {{ s.artist.name }}
-            </a>
+            <div class="flex items-center gap-2 text-sm text-white/60">
+              <a href="{% url 'artist_detail' s.artist.slug %}"
+                 class="hover:text-white/80 transition-colors">
+                {{ s.artist.name }}
+              </a>
+              {% if s.album %}
+              <span>•</span>
+              <a href="{% url 'album_detail' artist=s.artist.slug album=s.album.slug %}"
+                 class="hover:text-emerald-400 transition-colors">
+                {{ s.album.title }}
+              </a>
+              {% endif %}
+            </div>
           </div>
           {% if s.year %}
-          <span class="text-sm text-white/50 flex-shrink-0 hidden sm:block">{{ s.year }}</span>
+          <div class="flex-shrink-0">
+            <span class="text-sm text-white/50">{{ s.year }}</span>
+          </div>
           {% endif %}
         </li>
         {% endfor %}

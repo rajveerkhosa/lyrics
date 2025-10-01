@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{{ album.title }} by {{ artist.name }} — Lyrics Library{% endblock %}
+{% block content %}
+
+<!-- Full-bleed background with dark overlay -->
+<div class="fixed inset-0 -z-10">
+  <div class="w-full h-full bg-cover bg-center"
+       style="background-image:url('https://images.unsplash.com/photo-1721623777765-1381ba32859c?auto=format&fit=crop&w=1800&q=60');"></div>
+  <div class="absolute inset-0 bg-black/60"></div>
+</div>
+
+<!-- Page container -->
+<div class="relative z-10 pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8 pb-16">
+  <div class="max-w-5xl mx-auto">
+
+    <!-- Album Header -->
+    <section class="mb-10 sm:mb-12">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <!-- Album Art -->
+        <div class="flex justify-center md:justify-start">
+          <div class="w-64 h-64 sm:w-80 sm:h-80 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl ring-2 ring-white/20">
+            <div class="w-full h-full flex items-center justify-center text-7xl sm:text-8xl font-bold text-white/80">
+              {{ album.title|first|upper }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Album Info -->
+        <div class="space-y-4 text-center md:text-left">
+          <div>
+            <p class="text-sm sm:text-base text-white/60 uppercase tracking-wide mb-2">Album</p>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
+              {{ album.title }}
+            </h1>
+            <p class="text-lg sm:text-xl text-white/80">
+              by
+              <a href="{% url 'artist_detail' artist=artist.slug %}"
+                 class="link font-semibold hover:text-emerald-400">
+                {{ artist.name }}
+              </a>
+            </p>
+          </div>
+
+          <div class="text-white/70 space-y-2">
+            {% if album.year %}
+            <p class="flex items-center gap-2 justify-center md:justify-start">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span>Released: {{ album.year }}</span>
+            </p>
+            {% endif %}
+            <p class="flex items-center gap-2 justify-center md:justify-start">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+              <span>{% with cnt=songs|length %}{{ cnt }} song{{ cnt|pluralize }}{% endwith %}</span>
+            </p>
+            {% if view_count %}
+            <p class="flex items-center gap-2 justify-center md:justify-start">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>{{ view_count|floatformat:0 }} view{{ view_count|pluralize }}</span>
+            </p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Songs List -->
+    <section>
+      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-xl ring-1 ring-white/10">
+        <h2 class="text-2xl sm:text-3xl font-bold mb-6">Songs</h2>
+
+        {% if songs %}
+        <div class="space-y-3">
+          {% for song in songs %}
+          <a href="{% url 'song_detail' artist=artist.slug song=song.slug %}"
+             class="block p-4 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 transition-all group">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-semibold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">
+                  {{ song.title }}
+                </h3>
+                {% if song.featured_artists.all %}
+                <p class="text-sm text-white/60 mt-1">
+                  feat. {% for artist in song.featured_artists.all %}{{ artist.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                </p>
+                {% endif %}
+              </div>
+              <div class="flex items-center gap-3 text-sm text-white/60">
+                {% if song.year %}
+                <span>{{ song.year }}</span>
+                {% endif %}
+                <svg class="w-5 h-5 text-white/40 group-hover:text-emerald-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-white/60 text-center py-8">No songs in this album yet.</p>
+        {% endif %}
+      </div>
+    </section>
+
+  </div>
+</div>
+
+{% endblock %}

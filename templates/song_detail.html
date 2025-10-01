@@ -34,7 +34,24 @@
           <p class="mb-1">Released: {{ song.year }}</p>
           {% endif %}
           {% if song.album %}
-          <p>Album: {{ song.album }}</p>
+          <p class="mb-1">Album: <a href="{% url 'album_detail' artist=song.artist.slug album=song.album.slug %}" class="link">{{ song.album.title }}</a></p>
+          {% endif %}
+          {% if song.featured_artists.all %}
+          <p class="mb-1">
+            Featuring:
+            {% for artist in song.featured_artists.all %}
+              <a href="{% url 'artist_detail' artist=artist.slug %}" class="link">{{ artist.name }}</a>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </p>
+          {% endif %}
+          {% if view_count %}
+          <p class="mb-1 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span>{{ view_count|floatformat:0 }} view{{ view_count|pluralize }}</span>
+          </p>
           {% endif %}
         </div>
 
@@ -57,16 +74,6 @@
           {% endif %}
         </div>
 
-        <!-- Share/Actions -->
-        <div class="flex flex-wrap gap-3 justify-center md:justify-start">
-          <button onclick="window.print()"
-                  class="btn-secondary text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            Print
-          </button>
-        </div>
       </div>
     </div>
   </div>
@@ -88,7 +95,7 @@
             Romanization
           </button>
           <button data-toggle="translation"
-                  class="btn-toggle px-4 py-2 rounded-full transition-all duration-200 text-sm sm:text-base border">
+                  class="btn-toggle px-4 py-2 rounded-full transition-all duration-200 text-sm sm:text-base border active">
             English
           </button>
         </div>
@@ -166,20 +173,24 @@
 <script>
   window.SONG_PAGE_DATA = {
     lyrics: {{ lyrics_json|safe }},
-    selected: { punjabi: true, romanization: true, translation: false }
+    selected: { punjabi: true, romanization: true, translation: true }
   };
 </script>
 <script src="{% static 'js/song_page.js' %}"></script>
 
 <style>
   .btn-toggle {
-    @apply bg-white/10 text-white/70 border-white/20;
+    @apply bg-white/5 text-white/50 border-white/10;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    transform: scale(1);
   }
   .btn-toggle.active {
-    @apply bg-white/25 text-white border-white/40 font-semibold;
+    @apply bg-gradient-to-r from-emerald-500 to-cyan-500 text-white border-transparent font-bold;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+    transform: scale(1.05);
   }
-  .btn-toggle:hover {
-    @apply bg-white/20 border-white/30;
+  .btn-toggle:hover:not(:disabled) {
+    @apply bg-white/15 border-white/25;
   }
 
   .star-rating {

@@ -3,9 +3,9 @@ from django.urls import path
 from django.contrib.sitemaps.views import sitemap
 
 from . import views
-from .sitemaps import ArtistSitemap, SongSitemap
+from .sitemaps import ArtistSitemap, AlbumSitemap, SongSitemap
 
-sitemaps = {"artists": ArtistSitemap, "songs": SongSitemap}
+sitemaps = {"artists": ArtistSitemap, "albums": AlbumSitemap, "songs": SongSitemap}
 
 urlpatterns = [
     # Home / Top Charts
@@ -22,6 +22,7 @@ urlpatterns = [
 
     # Detail pages
     path("a/<slug:artist>/", views.artist_detail, name="artist_detail"),
+    path("album/<slug:artist>/<slug:album>/", views.album_detail, name="album_detail"),
     path("a/<slug:artist>/<slug:song>/", views.song_detail, name="song_detail"),
 
     # Authentication
