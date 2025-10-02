@@ -1,0 +1,84 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info
+dist
+build
+.eggs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django
+*.log
+*.pot
+db.sqlite3
+db.sqlite3-journal
+/media
+staticfiles
+local_settings.py
+
+# Virtual environments
+.venv
+venv
+ENV
+env
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+# package-lock.json (needed for Docker build)
+yarn.lock
+
+# IDE
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+
+# Testing
+htmlcov
+.tox
+.coverage
+.coverage.*
+.pytest_cache
+.hypothesis
+
+# Docker (keep these for reference, but exclude from image)
+# Dockerfile
+# docker-compose*.yml
+.dockerignore
+
+# Claude
+.claude
+
+# Documentation
+README.md
+*.md
+docs/
+
+# CI/CD (if you add them later)
+.github
+.gitlab-ci.yml
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*.swo
+*~

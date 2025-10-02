@@ -8,7 +8,8 @@
       "Bash(npx tailwindcss:*)",
       "Bash(pip install:*)",
       "Bash(python:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(chmod:*)"
     ],
     "deny": [],
     "ask": []

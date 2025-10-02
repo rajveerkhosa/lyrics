@@ -1,15 +1,127 @@
 # Deployment Guide
 
-This guide will help you deploy your Lyrics Library Django application to various hosting platforms.
+This guide will help you deploy your Lyrics Library Django application using Docker or various hosting platforms.
 
 ## Prerequisites
 
 1. Your code is in a Git repository
 2. You have all the necessary files:
    - `requirements.txt` ✅
-   - `Procfile` ✅
-   - `runtime.txt` ✅
+   - `Dockerfile` ✅
+   - `docker-compose.yml` ✅
    - `.env.example` ✅
+   - `Procfile` ✅ (for non-Docker deployments)
+   - `runtime.txt` ✅ (for non-Docker deployments)
+
+---
+
+## 🐳 Docker Deployment (Recommended)
+
+Docker provides a consistent deployment environment across all platforms.
+
+### Quick Start with Docker Compose
+
+1. **Build and start the application**:
+   ```bash
+   docker-compose up --build
+   ```
+
+   Or run in detached mode:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+2. **Access the application**: `http://localhost:8000`
+
+3. **Create a superuser**:
+   ```bash
+   docker-compose exec web python manage.py createsuperuser
+   ```
+
+4. **View logs**:
+   ```bash
+   docker-compose logs -f web
+   ```
+
+### Production Docker Deployment
+
+For production, update `docker-compose.yml` to use PostgreSQL:
+
+1. Uncomment the PostgreSQL service in `docker-compose.yml`
+2. Update environment variables:
+   ```yaml
+   environment:
+     - DATABASE_URL=postgresql://lyrics_user:STRONG_PASSWORD@db:5432/lyrics_db
+     - DEBUG=False
+     - SECRET_KEY=your-very-long-random-secret-key
+     - ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+   ```
+
+3. Start services:
+   ```bash
+   docker-compose up -d --build
+   ```
+
+### Deploy Docker to Cloud Platforms
+
+#### Option A: Render, Railway, or Fly.io (with Docker)
+
+These platforms auto-detect and use your `Dockerfile`:
+
+1. Connect your GitHub repository
+2. Set environment variables in the dashboard:
+   - `SECRET_KEY` - Strong random key
+   - `DATABASE_URL` - Auto-provided by platform
+   - `ALLOWED_HOSTS` - Your domain
+   - `DEBUG=False`
+3. Deploy automatically!
+
+#### Option B: DigitalOcean, AWS, or Google Cloud
+
+1. Build the image:
+   ```bash
+   docker build -t lyrics-app .
+   ```
+2. Push to container registry (Docker Hub, AWS ECR, GCR)
+3. Deploy with environment variables configured
+
+### Docker Management Commands
+
+**Stop the application**:
+```bash
+docker-compose down
+```
+
+**View running containers**:
+```bash
+docker-compose ps
+```
+
+**Run migrations**:
+```bash
+docker-compose exec web python manage.py migrate
+```
+
+**Collect static files**:
+```bash
+docker-compose exec web python manage.py collectstatic --noinput
+```
+
+**Backup database (SQLite)**:
+```bash
+docker cp $(docker-compose ps -q web):/app/db.sqlite3 ./backup.sqlite3
+```
+
+**Rebuild without cache**:
+```bash
+docker-compose build --no-cache
+```
+
+---
+
+## Alternative: Platform-as-a-Service Deployment
+
+If you prefer not to use Docker, you can deploy directly to these platforms:
 
 ## Deployment Platforms
 

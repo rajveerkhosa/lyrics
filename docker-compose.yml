@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code for development (comment out for production)
+      - .:/app
+      # Persist database
+      - db_data:/app/db.sqlite3
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=your-secret-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+    restart: unless-stopped
+
+  # PostgreSQL database (optional, uncomment for production)
+  # db:
+  #   image: postgres:15-alpine
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   environment:
+  #     - POSTGRES_DB=lyrics_db
+  #     - POSTGRES_USER=lyrics_user
+  #     - POSTGRES_PASSWORD=change-this-password
+  #   restart: unless-stopped
+
+  # To use PostgreSQL, update the web service:
+  # web:
+  #   ...
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - DATABASE_URL=postgresql://lyrics_user:change-this-password@db:5432/lyrics_db
+  #     - DEBUG=False
+  #     - SECRET_KEY=your-production-secret-key
+  #     - ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+
+volumes:
+  db_data:
+  # postgres_data:  # Uncomment if using PostgreSQL

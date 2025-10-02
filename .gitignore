@@ -52,7 +52,7 @@ static/css/tw.css
 dist/
 .npm/
 .pnpm-store/
-package-lock.json
+# package-lock.json (keep this for Docker builds)
 yarn.lock
 
 # --- Database backups & dumps ---
