@@ -12,12 +12,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=True, cast=bool)
+DEBUG = os.getenv("DEBUG", "0") == "1"
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost', cast=Csv())
+ALLOWED_HOSTS = ["*"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.onrender.com",
+    "https://yourdomain.com",
+    "https://www.yourdomain.com",
+]
 
 
 # Application definition
@@ -69,20 +75,9 @@ WSGI_APPLICATION = 'lyricslib.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Use DATABASE_URL if available (for production), otherwise use SQLite for local dev
-DATABASE_URL = config('DATABASE_URL', default=None)
-
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL)
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+DATABASES = {
+    "default": dj_database_url.config(default=os.getenv("DATABASE_URL", ""), conn_max_age=600)
+}
 
 
 # Password validation
@@ -121,7 +116,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+if (BASE_DIR / "static").exists():
+    STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # WhiteNoise configuration for serving static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
