@@ -2,6 +2,15 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env.local if it exists, otherwise fall back to .env
+env_path = Path(__file__).resolve().parent / '.env.local'
+if env_path.exists():
+    load_dotenv(env_path)
+else:
+    load_dotenv()
 
 
 def main():

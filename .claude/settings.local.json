@@ -10,7 +10,8 @@
       "Bash(python:*)",
       "Bash(pkill:*)",
       "Bash(chmod:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
