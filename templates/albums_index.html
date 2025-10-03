@@ -2,29 +2,59 @@
 {% block title %}All Albums · Lyrics Library{% endblock %}
 {% block content %}
 <div class="page-container py-8 sm:py-12">
-  <div class="mb-8">
+  <div class="mb-8 sm:mb-10">
     <h1 class="heading-1 mb-3">All Albums</h1>
-    <p class="text-white/70">Browse albums featuring Punjabi music</p>
+    <p class="text-white/70 text-lg">Explore our collection of Punjabi music albums with English translations</p>
   </div>
 
   {% if albums %}
-  <div class="card">
-    <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-      {% for album in albums %}
-      <li>
-        <a href="{% url 'album_detail' artist=album.artist.slug album=album.slug %}"
-           class="block p-3 sm:p-4 hover:bg-white/10 rounded-lg transition-all border border-white/10 hover:border-white/30 group">
-          <h3 class="font-semibold text-base sm:text-lg group-hover:text-emerald-400 transition">{{ album.title }}</h3>
-          <p class="text-sm text-white/60 mt-1">{{ album.artist.name }}{% if album.year %} • {{ album.year }}{% endif %}</p>
-        </a>
-      </li>
-      {% endfor %}
-    </ul>
+  <!-- Albums Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
+    {% for album in albums %}
+    <a href="{% url 'album_detail' artist=album.artist.slug album=album.slug %}"
+       class="group">
+      <!-- Album Cover -->
+      <div class="aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 mb-3 ring-2 ring-white/10 group-hover:ring-emerald-400/60 transition-all duration-300 shadow-xl group-hover:shadow-2xl group-hover:scale-105">
+        {% if album.get_image_url %}
+        <img src="{{ album.get_image_url }}"
+             alt="{{ album.title }}"
+             class="w-full h-full object-cover group-hover:brightness-110 transition-all duration-300"
+             loading="lazy">
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center text-4xl sm:text-5xl md:text-6xl font-bold text-white/80 group-hover:text-white transition-colors">
+          {{ album.title|first|upper }}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Album Info -->
+      <div class="px-1">
+        <h3 class="font-bold text-sm sm:text-base line-clamp-2 mb-1 group-hover:text-emerald-400 transition-colors">
+          {{ album.title }}
+        </h3>
+        <p class="text-xs sm:text-sm text-white/60 group-hover:text-white/80 transition-colors">
+          {{ album.artist.name }}
+        </p>
+        {% if album.year %}
+        <p class="text-xs text-white/40 mt-0.5">{{ album.year }}</p>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
   </div>
   {% else %}
-  <div class="card text-center py-12">
-    <p class="text-white/60 mb-4">No albums available yet</p>
-    <p class="text-sm text-white/50">Albums will appear here once added to songs</p>
+  <!-- Empty State -->
+  <div class="card text-center py-16 sm:py-24">
+    <div class="max-w-md mx-auto">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
+        <svg class="w-10 h-10 sm:w-12 sm:h-12 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+      </div>
+      <h2 class="heading-3 mb-2">No Albums Yet</h2>
+      <p class="text-white/60 mb-4">Albums will appear here once added to the database</p>
+      <p class="text-sm text-white/50">Check back soon for new releases!</p>
+    </div>
   </div>
   {% endif %}
 </div>

@@ -25,11 +25,28 @@
       </button>
 
       {% if user.is_authenticated %}
-        <a href="{% url 'profile' %}" class="hidden sm:inline-flex items-center gap-2 text-white hover:text-white text-sm font-medium px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-          <span class="hidden lg:inline">{{ user.username }}</span>
-        </a>
-        <a href="{% url 'logout' %}" class="inline-flex items-center text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg bg-red-600/80 hover:bg-red-600 text-white font-medium transition">Logout</a>
+        <!-- Profile Dropdown -->
+        <div class="relative hidden sm:block">
+          <button id="profileBtn" class="inline-flex items-center gap-2 text-white hover:text-white text-sm font-medium px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/20 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+            <span class="hidden lg:inline">{{ user.username }}</span>
+          </button>
+          <!-- Dropdown Menu -->
+          <div id="profileMenu" class="hidden absolute right-0 mt-2 w-48 rounded-lg bg-black/90 backdrop-blur-sm border border-white/20 shadow-xl overflow-hidden">
+            <a href="{% url 'profile' %}" class="block px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                Profile
+              </div>
+            </a>
+            <a href="{% url 'logout' %}" class="block px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition border-t border-white/10">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+              </div>
+            </a>
+          </div>
+        </div>
       {% else %}
         <a href="{% url 'login' %}" class="inline-flex items-center text-xs sm:text-sm px-2 sm:px-3 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-white font-medium border border-white/20 transition">Login</a>
         <a href="{% url 'signup' %}" class="inline-flex items-center text-xs sm:text-sm px-2 sm:px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/30 transition">Sign Up</a>
@@ -54,7 +71,12 @@
       <a href="{% url 'songs_index' %}" class="block text-white/70 hover:text-white text-sm py-2">Songs</a>
       {% if user.is_authenticated %}
         <a href="{% url 'profile' %}" class="block text-white bg-white/10 hover:bg-white/15 text-sm py-3 px-4 rounded-lg border-t border-white/10 mt-3 font-medium">👤 Profile ({{ user.username }})</a>
-        <a href="{% url 'logout' %}" class="block text-white bg-red-600/80 hover:bg-red-600 text-sm py-3 px-4 rounded-lg mt-2 font-medium">Logout</a>
+        <a href="{% url 'logout' %}" class="block text-white bg-white/10 hover:bg-white/15 text-sm py-3 px-4 rounded-lg mt-2 font-medium">
+          <div class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            Logout
+          </div>
+        </a>
       {% else %}
         <a href="{% url 'login' %}" class="block text-white bg-white/10 hover:bg-white/15 text-sm py-3 px-4 rounded-lg border-t border-white/10 mt-3 font-medium">Login</a>
         <a href="{% url 'signup' %}" class="block text-white bg-blue-600 hover:bg-blue-700 text-sm py-3 px-4 rounded-lg mt-2 font-semibold shadow-lg">Sign Up</a>
@@ -65,3 +87,21 @@
     </nav>
   </div>
 </header>
+
+<script>
+  // Profile dropdown toggle
+  const profileBtn = document.getElementById('profileBtn');
+  const profileMenu = document.getElementById('profileMenu');
+
+  profileBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle('hidden');
+  });
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (profileMenu && !profileMenu.contains(e.target) && e.target !== profileBtn) {
+      profileMenu.classList.add('hidden');
+    }
+  });
+</script>
