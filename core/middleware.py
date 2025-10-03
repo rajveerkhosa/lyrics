@@ -26,6 +26,11 @@ class PageViewMiddleware(MiddlewareMixin):
                 if path == '/' or path.startswith('/charts'):
                     content_type = 'home'
                     content_title = 'Home / Charts'
+                elif path.startswith('/album/'):
+                    # Album detail page: /album/<artist-slug>/<album-slug>/
+                    parts = path.strip('/').split('/')
+                    if len(parts) >= 3:
+                        content_type = 'album'
                 elif path.startswith('/a/'):
                     # Could be artist or song
                     parts = path.strip('/').split('/')
@@ -38,7 +43,7 @@ class PageViewMiddleware(MiddlewareMixin):
                     content_type = 'other'
                     content_title = 'Artists Index'
                 elif path.startswith('/albums'):
-                    content_type = 'album'
+                    content_type = 'other'
                     content_title = 'Albums Index'
                 elif path.startswith('/songs'):
                     content_type = 'other'

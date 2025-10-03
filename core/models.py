@@ -22,9 +22,26 @@ class Artist(models.Model):
 
 class Album(models.Model):
     title = models.CharField(max_length=200)
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='albums')
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='albums', help_text="Primary artist")
+    additional_artists = models.ManyToManyField(Artist, blank=True, related_name='collab_albums', help_text="Additional artists on this album")
     slug = models.SlugField(unique=True, blank=True)
     year = models.IntegerField(null=True, blank=True)
+    image = models.ImageField(upload_to='album_images/', blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True, help_text="Or provide an image URL instead of uploading")
+
+    def get_image_url(self):
+        """Return image URL or uploaded image"""
+        if self.image:
+            return self.image.url
+        elif self.image_url:
+            return self.image_url
+        return None
+
+    def get_all_artists(self):
+        """Return all artists (primary + additional)"""
+        artists = [self.artist]
+        artists.extend(self.additional_artists.all())
+        return artists
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -32,6 +49,10 @@ class Album(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
+        additional = self.additional_artists.all()
+        if additional:
+            artist_names = f"{self.artist.name}, " + ", ".join(a.name for a in additional)
+            return f"{self.title} ({artist_names})"
         return f"{self.title} ({self.artist.name})"
 
     class Meta:
@@ -39,13 +60,44 @@ class Album(models.Model):
 
 
 class Song(models.Model):
-    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='main_songs')
+    artist = models.ForeignKey(Artist, on_delete=models.CASCADE, related_name='main_songs', help_text="Primary artist")
+    additional_artists = models.ManyToManyField(Artist, blank=True, related_name='collab_songs', help_text="Additional primary artists (not features)")
     title = models.CharField(max_length=200)
     album = models.ForeignKey(Album, on_delete=models.SET_NULL, blank=True, null=True, related_name='songs')
-    featured_artists = models.ManyToManyField(Artist, blank=True, related_name='featured_songs')
+    featured_artists = models.ManyToManyField(Artist, blank=True, related_name='featured_songs', help_text="Featured artists (e.g., 'feat. Artist')")
     year = models.IntegerField(null=True, blank=True)
     slug = models.SlugField(unique=True, blank=True)
     is_published = models.BooleanField(default=False)
+    image = models.ImageField(upload_to='song_images/', blank=True, null=True)
+    image_url = models.URLField(blank=True, null=True, help_text="Or provide an image URL instead of uploading")
+
+    def get_image_url(self):
+        """Return song image if exists, otherwise return album image"""
+        if self.image:
+            return self.image.url
+        elif self.image_url:
+            return self.image_url
+        elif self.album:
+            return self.album.get_image_url()
+        return None
+
+    def get_all_primary_artists(self):
+        """Return all primary artists (main + additional, not features)"""
+        artists = [self.artist]
+        artists.extend(self.additional_artists.all())
+        return artists
+
+    def get_artist_display(self):
+        """Return artist display string: 'Artist 1, Artist 2 feat. Featured Artist'"""
+        primary = [self.artist]
+        primary.extend(self.additional_artists.all())
+        primary_names = ", ".join(a.name for a in primary)
+
+        featured = list(self.featured_artists.all())
+        if featured:
+            featured_names = ", ".join(a.name for a in featured)
+            return f"{primary_names} feat. {featured_names}"
+        return primary_names
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -53,7 +105,7 @@ class Song(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"{self.title} — {self.artist.name}"
+        return f"{self.title} — {self.get_artist_display()}"
 
 
 class Line(models.Model):

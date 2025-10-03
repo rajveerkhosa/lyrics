@@ -11,15 +11,64 @@
       {% endif %}
     </h1>
     {% if q %}
-    <p class="text-white/70">Found results in songs and lyrics</p>
+    <p class="text-white/70">Found results in songs, albums, artists, and lyrics</p>
     {% endif %}
   </div>
 
   {% if q %}
+  <!-- Artists Section -->
+  {% if artists_page and artists_page.paginator.count > 0 %}
+  <section class="mb-8 sm:mb-12">
+    <h2 class="heading-3 mb-4 text-white/90">Artists ({{ artists_page.paginator.count }})</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {% for artist in artists_page %}
+      <a href="{% url 'artist_detail' artist.slug %}"
+         class="card-hover flex flex-col items-center text-center group">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden bg-gradient-to-br from-white/20 to-white/10 mb-3 ring-2 ring-white/20 group-hover:ring-emerald-400/60 transition-all">
+          {% if artist.image_url %}
+          <img src="{{ artist.image_url }}" alt="{{ artist.name }}" class="w-full h-full object-cover" loading="lazy">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-2xl sm:text-3xl font-bold text-white/80">
+            {{ artist.name|first|upper }}
+          </div>
+          {% endif %}
+        </div>
+        <h3 class="font-semibold text-sm sm:text-base line-clamp-2 px-2">{{ artist.name }}</h3>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Albums Section -->
+  {% if albums_page and albums_page.paginator.count > 0 %}
+  <section class="mb-8 sm:mb-12">
+    <h2 class="heading-3 mb-4 text-white/90">Albums ({{ albums_page.paginator.count }})</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      {% for album in albums_page %}
+      <a href="{% url 'album_detail' artist=album.artist.slug album=album.slug %}"
+         class="card-hover group">
+        <div class="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 mb-3 ring-2 ring-white/20 group-hover:ring-emerald-400/60 transition-all">
+          {% if album.get_image_url %}
+          <img src="{{ album.get_image_url }}" alt="{{ album.title }}" class="w-full h-full object-cover" loading="lazy">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-3xl sm:text-4xl font-bold text-white/80">
+            {{ album.title|first|upper }}
+          </div>
+          {% endif %}
+        </div>
+        <h3 class="font-semibold text-sm sm:text-base line-clamp-2 mb-1">{{ album.title }}</h3>
+        <p class="text-xs sm:text-sm text-white/60">{{ album.artist.name }}{% if album.year %} • {{ album.year }}{% endif %}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
   <!-- Songs Section -->
   <section class="mb-8 sm:mb-12">
-    <h2 class="heading-3 mb-4 text-white/90">Songs</h2>
-    {% if songs_page %}
+    <h2 class="heading-3 mb-4 text-white/90">Songs{% if songs_page.paginator.count > 0 %} ({{ songs_page.paginator.count }}){% endif %}</h2>
+    {% if songs_page and songs_page.paginator.count > 0 %}
     <div class="card">
       <ul class="space-y-3">
         {% for s in songs_page %}

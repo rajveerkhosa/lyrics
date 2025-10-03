@@ -82,6 +82,10 @@ class SongAdminForm(forms.ModelForm):
             )
             cleaned_data['album'] = album
 
+        # Auto-fill year from album if not provided
+        if album and album.year and not cleaned_data.get('year'):
+            cleaned_data['year'] = album.year
+
         return cleaned_data
 
 
@@ -94,10 +98,17 @@ class ArtistAdmin(admin.ModelAdmin):
 
 @admin.register(Album)
 class AlbumAdmin(admin.ModelAdmin):
-    list_display = ("title", "artist", "year")
+    list_display = ("title", "artist", "year", "has_image")
     list_filter = ("artist", "year")
     search_fields = ("title", "artist__name")
     prepopulated_fields = {"slug": ("title",)}
+    filter_horizontal = ("additional_artists",)
+    fields = ("artist", "additional_artists", "title", "year", "image", "image_url", "slug")
+
+    def has_image(self, obj):
+        return bool(obj.image or obj.image_url)
+    has_image.boolean = True
+    has_image.short_description = "Image"
 
 
 @admin.register(Song)
@@ -107,9 +118,9 @@ class SongAdmin(admin.ModelAdmin):
     list_filter = ("artist", "album", "is_published", "year")
     search_fields = ("title", "artist__name", "album__title")
     prepopulated_fields = {"slug": ("title",)}
-    filter_horizontal = ("featured_artists",)
+    filter_horizontal = ("additional_artists", "featured_artists")
     inlines = [LineInline]
-    fields = ("artist", "title", "album", "new_album_title", "year", "featured_artists", "slug", "is_published", "csv_lyrics")
+    fields = ("artist", "additional_artists", "title", "album", "new_album_title", "year", "featured_artists", "image", "image_url", "slug", "is_published", "csv_lyrics")
 
     class Media:
         js = ('admin/js/song_admin.js',)

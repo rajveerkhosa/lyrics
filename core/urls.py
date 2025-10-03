@@ -35,6 +35,9 @@ urlpatterns = [
     path("favorite/song/<int:song_id>/", views.toggle_favorite_song, name="toggle_favorite_song"),
     path("favorite/artist/<int:artist_id>/", views.toggle_favorite_artist, name="toggle_favorite_artist"),
 
+    # Private stats dashboard
+    path("stats/", views.stats_view, name="stats"),
+
     # Sitemap
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
 ]

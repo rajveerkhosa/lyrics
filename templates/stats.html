@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Site Statistics · Lyrics Library{% endblock %}
+{% block content %}
+
+<div class="page-container py-8 sm:py-12">
+  <div class="mb-8">
+    <h1 class="heading-1 mb-3">📊 Site Statistics</h1>
+    <p class="text-white/70">Private analytics dashboard</p>
+  </div>
+
+  <!-- USER STATISTICS -->
+  <section class="mb-10">
+    <h2 class="heading-2 mb-6">👥 Users</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Total Users</p>
+        <p class="text-3xl font-bold text-emerald-400">{{ total_users }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Active Users (7 days)</p>
+        <p class="text-3xl font-bold text-blue-400">{{ active_users_7d }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Active Users (30 days)</p>
+        <p class="text-3xl font-bold text-blue-400">{{ active_users_30d }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">New Users Today</p>
+        <p class="text-3xl font-bold text-green-400">+{{ new_users_today }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">New Users (7 days)</p>
+        <p class="text-3xl font-bold text-green-400">+{{ new_users_7d }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">New Users (30 days)</p>
+        <p class="text-3xl font-bold text-green-400">+{{ new_users_30d }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTENT STATISTICS -->
+  <section class="mb-10">
+    <h2 class="heading-2 mb-6">📚 Content</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Published Songs</p>
+        <p class="text-3xl font-bold text-purple-400">{{ total_songs }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Unpublished Songs</p>
+        <p class="text-3xl font-bold text-yellow-400">{{ total_unpublished_songs }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Artists</p>
+        <p class="text-3xl font-bold text-pink-400">{{ total_artists }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Albums</p>
+        <p class="text-3xl font-bold text-indigo-400">{{ total_albums }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Song Comments</p>
+        <p class="text-3xl font-bold text-cyan-400">{{ total_song_comments }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Artist Comments</p>
+        <p class="text-3xl font-bold text-cyan-400">{{ total_artist_comments }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Song Ratings</p>
+        <p class="text-3xl font-bold text-orange-400">{{ total_song_ratings }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Artist Ratings</p>
+        <p class="text-3xl font-bold text-orange-400">{{ total_artist_ratings }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Total Lyrics Lines</p>
+        <p class="text-3xl font-bold text-teal-400">{{ total_lines|floatformat:0 }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAFFIC STATISTICS -->
+  <section class="mb-10">
+    <h2 class="heading-2 mb-6">📈 Traffic</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Total Page Views</p>
+        <p class="text-3xl font-bold text-emerald-400">{{ total_views|floatformat:0 }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Views Today</p>
+        <p class="text-3xl font-bold text-blue-400">{{ views_today }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Views (7 days)</p>
+        <p class="text-3xl font-bold text-blue-400">{{ views_7d|floatformat:0 }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Views (30 days)</p>
+        <p class="text-3xl font-bold text-blue-400">{{ views_30d|floatformat:0 }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Registered User Views</p>
+        <p class="text-3xl font-bold text-green-400">{{ registered_views|floatformat:0 }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Anonymous Views</p>
+        <p class="text-3xl font-bold text-yellow-400">{{ anonymous_views|floatformat:0 }}</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Unique IPs (All Time)</p>
+        <p class="text-3xl font-bold text-purple-400">{{ unique_ips_total }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Unique IPs Today</p>
+        <p class="text-3xl font-bold text-pink-400">{{ unique_ips_today }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Unique IPs (7 days)</p>
+        <p class="text-3xl font-bold text-indigo-400">{{ unique_ips_7d }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Unique IPs (30 days)</p>
+        <p class="text-3xl font-bold text-cyan-400">{{ unique_ips_30d }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ENGAGEMENT STATISTICS -->
+  <section class="mb-10">
+    <h2 class="heading-2 mb-6">💬 Engagement</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Song Favorites</p>
+        <p class="text-3xl font-bold text-red-400">{{ total_song_favorites }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Artist Favorites</p>
+        <p class="text-3xl font-bold text-red-400">{{ total_artist_favorites }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Avg Song Rating</p>
+        <p class="text-3xl font-bold text-yellow-400">{{ avg_song_rating|floatformat:1|default:"N/A" }}{% if avg_song_rating %}/5{% endif %}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Avg Artist Rating</p>
+        <p class="text-3xl font-bold text-yellow-400">{{ avg_artist_rating|floatformat:1|default:"N/A" }}{% if avg_artist_rating %}/5{% endif %}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Comments per Day</p>
+        <p class="text-3xl font-bold text-cyan-400">{{ comments_per_day|floatformat:1 }}</p>
+      </div>
+      <div class="card">
+        <p class="text-white/60 text-sm mb-1">Ratings per Day</p>
+        <p class="text-3xl font-bold text-orange-400">{{ ratings_per_day|floatformat:1 }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOP CONTENT -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+    <!-- Top Songs -->
+    <section>
+      <h2 class="heading-3 mb-4">🎵 Top Songs</h2>
+      <div class="card space-y-2">
+        {% if top_songs %}
+          {% for song in top_songs %}
+          <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+            <span class="text-white/40 font-bold text-sm w-6 flex-shrink-0">{{ forloop.counter }}</span>
+            <a href="{{ song.url }}" class="link text-sm flex-1 min-w-0">
+              <span class="block truncate">{{ song.content_title }}</span>
+            </a>
+            <span class="text-emerald-400 font-semibold text-sm flex-shrink-0">{{ song.views }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-white/60 text-center py-4">No song views yet</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Top Artists -->
+    <section>
+      <h2 class="heading-3 mb-4">🎤 Top Artists</h2>
+      <div class="card space-y-2">
+        {% if top_artists %}
+          {% for artist in top_artists %}
+          <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+            <span class="text-white/40 font-bold text-sm w-6 flex-shrink-0">{{ forloop.counter }}</span>
+            <a href="{{ artist.url }}" class="link text-sm flex-1 min-w-0">
+              <span class="block truncate">{{ artist.content_title }}</span>
+            </a>
+            <span class="text-blue-400 font-semibold text-sm flex-shrink-0">{{ artist.views }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-white/60 text-center py-4">No artist views yet</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <!-- Top Albums -->
+    <section>
+      <h2 class="heading-3 mb-4">💿 Top Albums</h2>
+      <div class="card space-y-2">
+        {% if top_albums %}
+          {% for album in top_albums %}
+          <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition">
+            <span class="text-white/40 font-bold text-sm w-6 flex-shrink-0">{{ forloop.counter }}</span>
+            <a href="{{ album.url }}" class="link text-sm flex-1 min-w-0">
+              <span class="block truncate">{{ album.content_title }}</span>
+            </a>
+            <span class="text-purple-400 font-semibold text-sm flex-shrink-0">{{ album.views }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <p class="text-white/60 text-center py-4">No album views yet</p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
+
+{% endblock %}

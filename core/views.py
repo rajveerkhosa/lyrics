@@ -113,12 +113,14 @@ def search(request):
     q = (request.GET.get("q") or "").strip()
     song_matches = Song.objects.none()
     line_matches = Line.objects.none()
+    album_matches = Album.objects.none()
+    artist_matches = Artist.objects.none()
 
     if q:
         song_matches = (
             Song.objects.filter(is_published=True)
-            .filter(Q(title__icontains=q) | Q(artist__name__icontains=q))
-            .select_related("artist")
+            .filter(Q(title__icontains=q) | Q(artist__name__icontains=q) | Q(album__title__icontains=q))
+            .select_related("artist", "album")
             .distinct()
         )
         line_matches = (
@@ -131,9 +133,17 @@ def search(request):
             .select_related("song", "song__artist")
             .order_by("song__artist__name", "song__title", "no")
         )
+        album_matches = (
+            Album.objects.filter(Q(title__icontains=q) | Q(artist__name__icontains=q))
+            .select_related("artist")
+            .distinct()
+        )
+        artist_matches = Artist.objects.filter(Q(name__icontains=q)).distinct()
 
     sp = Paginator(song_matches, 20)
     lp = Paginator(line_matches, 20)
+    ap = Paginator(album_matches, 20)
+    arp = Paginator(artist_matches, 20)
     return render(
         request,
         "search.html",
@@ -141,6 +151,8 @@ def search(request):
             "q": q,
             "songs_page": sp.get_page(request.GET.get("sp") or 1),
             "lines_page": lp.get_page(request.GET.get("lp") or 1),
+            "albums_page": ap.get_page(request.GET.get("ap") or 1),
+            "artists_page": arp.get_page(request.GET.get("arp") or 1),
         },
     )
 
@@ -425,3 +437,197 @@ def toggle_favorite_artist(request, artist_id):
         messages.success(request, f'{artist.name} added to favorites!')
 
     return redirect(request.META.get('HTTP_REFERER', 'charts'))
+
+
+def stats_view(request):
+    """Private stats dashboard showing site analytics"""
+    from django.contrib.auth.models import User
+    from django.db.models import Count, Avg
+
+    # Time periods
+    now = timezone.now()
+    today = now.date()
+    seven_days_ago = now - timedelta(days=7)
+    thirty_days_ago = now - timedelta(days=30)
+
+    # USER STATISTICS
+    total_users = User.objects.count()
+    active_users_7d = PageView.objects.filter(
+        viewed_at__gte=seven_days_ago,
+        user__isnull=False
+    ).values('user').distinct().count()
+    active_users_30d = PageView.objects.filter(
+        viewed_at__gte=thirty_days_ago,
+        user__isnull=False
+    ).values('user').distinct().count()
+    new_users_today = User.objects.filter(date_joined__date=today).count()
+    new_users_7d = User.objects.filter(date_joined__gte=seven_days_ago).count()
+    new_users_30d = User.objects.filter(date_joined__gte=thirty_days_ago).count()
+
+    # CONTENT STATISTICS
+    total_songs = Song.objects.filter(is_published=True).count()
+    total_unpublished_songs = Song.objects.filter(is_published=False).count()
+    total_artists = Artist.objects.count()
+    total_albums = Album.objects.count()
+    total_song_comments = SongComment.objects.count()
+    total_artist_comments = ArtistComment.objects.count()
+    total_song_ratings = SongRating.objects.count()
+    total_artist_ratings = ArtistRating.objects.count()
+    total_lines = Line.objects.count()
+
+    # TRAFFIC STATISTICS
+    total_views = PageView.objects.count()
+    views_today = PageView.objects.filter(viewed_at__date=today).count()
+    views_7d = PageView.objects.filter(viewed_at__gte=seven_days_ago).count()
+    views_30d = PageView.objects.filter(viewed_at__gte=thirty_days_ago).count()
+
+    unique_ips_total = PageView.objects.values('ip_address').distinct().count()
+    unique_ips_today = PageView.objects.filter(viewed_at__date=today).values('ip_address').distinct().count()
+    unique_ips_7d = PageView.objects.filter(viewed_at__gte=seven_days_ago).values('ip_address').distinct().count()
+    unique_ips_30d = PageView.objects.filter(viewed_at__gte=thirty_days_ago).values('ip_address').distinct().count()
+
+    registered_views = PageView.objects.filter(user__isnull=False).count()
+    anonymous_views = PageView.objects.filter(user__isnull=True).count()
+
+    # TOP CONTENT
+    # Get top URLs with view counts, then fetch actual objects to get titles
+    top_song_urls = PageView.objects.filter(content_type='song').values(
+        'url'
+    ).annotate(
+        views=Count('id')
+    ).order_by('-views')[:10]
+
+    top_songs = []
+    for item in top_song_urls:
+        url = item['url']
+        # Parse URL: /a/<artist-slug>/<song-slug>/
+        parts = url.strip('/').split('/')
+        if len(parts) >= 3:
+            try:
+                song = Song.objects.select_related('artist').get(
+                    artist__slug=parts[1],
+                    slug=parts[2]
+                )
+                top_songs.append({
+                    'url': url,
+                    'content_title': f"{song.title} — {song.artist.name}",
+                    'views': item['views']
+                })
+            except Song.DoesNotExist:
+                pass
+
+    top_artist_urls = PageView.objects.filter(content_type='artist').values(
+        'url'
+    ).annotate(
+        views=Count('id')
+    ).order_by('-views')[:10]
+
+    top_artists = []
+    for item in top_artist_urls:
+        url = item['url']
+        # Parse URL: /a/<artist-slug>/
+        parts = url.strip('/').split('/')
+        if len(parts) >= 2:
+            try:
+                artist = Artist.objects.get(slug=parts[1])
+                top_artists.append({
+                    'url': url,
+                    'content_title': artist.name,
+                    'views': item['views']
+                })
+            except Artist.DoesNotExist:
+                pass
+
+    top_album_urls = PageView.objects.filter(content_type='album').values(
+        'url'
+    ).annotate(
+        views=Count('id')
+    ).order_by('-views')[:10]
+
+    top_albums = []
+    for item in top_album_urls:
+        url = item['url']
+        # Parse URL: /album/<artist-slug>/<album-slug>/
+        parts = url.strip('/').split('/')
+        if len(parts) >= 3:
+            try:
+                album = Album.objects.select_related('artist').get(
+                    artist__slug=parts[1],
+                    slug=parts[2]
+                )
+                top_albums.append({
+                    'url': url,
+                    'content_title': f"{album.title} — {album.artist.name}",
+                    'views': item['views']
+                })
+            except Album.DoesNotExist:
+                pass
+
+    # ENGAGEMENT STATISTICS
+    total_song_favorites = UserProfile.objects.annotate(
+        fav_count=Count('favorite_songs')
+    ).aggregate(total=Count('favorite_songs'))['total'] or 0
+
+    total_artist_favorites = UserProfile.objects.annotate(
+        fav_count=Count('favorite_artists')
+    ).aggregate(total=Count('favorite_artists'))['total'] or 0
+
+    avg_song_rating = SongRating.objects.aggregate(avg=Avg('rating'))['avg']
+    avg_artist_rating = ArtistRating.objects.aggregate(avg=Avg('rating'))['avg']
+
+    # Calculate average comments/ratings per day
+    if total_users > 0:
+        days_since_launch = (now - User.objects.order_by('date_joined').first().date_joined).days or 1
+        comments_per_day = (total_song_comments + total_artist_comments) / days_since_launch
+        ratings_per_day = (total_song_ratings + total_artist_ratings) / days_since_launch
+    else:
+        comments_per_day = 0
+        ratings_per_day = 0
+
+    context = {
+        # Users
+        'total_users': total_users,
+        'active_users_7d': active_users_7d,
+        'active_users_30d': active_users_30d,
+        'new_users_today': new_users_today,
+        'new_users_7d': new_users_7d,
+        'new_users_30d': new_users_30d,
+
+        # Content
+        'total_songs': total_songs,
+        'total_unpublished_songs': total_unpublished_songs,
+        'total_artists': total_artists,
+        'total_albums': total_albums,
+        'total_song_comments': total_song_comments,
+        'total_artist_comments': total_artist_comments,
+        'total_song_ratings': total_song_ratings,
+        'total_artist_ratings': total_artist_ratings,
+        'total_lines': total_lines,
+
+        # Traffic
+        'total_views': total_views,
+        'views_today': views_today,
+        'views_7d': views_7d,
+        'views_30d': views_30d,
+        'unique_ips_total': unique_ips_total,
+        'unique_ips_today': unique_ips_today,
+        'unique_ips_7d': unique_ips_7d,
+        'unique_ips_30d': unique_ips_30d,
+        'registered_views': registered_views,
+        'anonymous_views': anonymous_views,
+
+        # Top Content
+        'top_songs': top_songs,
+        'top_artists': top_artists,
+        'top_albums': top_albums,
+
+        # Engagement
+        'total_song_favorites': total_song_favorites,
+        'total_artist_favorites': total_artist_favorites,
+        'avg_song_rating': avg_song_rating,
+        'avg_artist_rating': avg_artist_rating,
+        'comments_per_day': comments_per_day,
+        'ratings_per_day': ratings_per_day,
+    }
+
+    return render(request, 'stats.html', context)

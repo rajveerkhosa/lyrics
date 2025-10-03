@@ -2,114 +2,147 @@
 {% block title %}{{ album.title }} by {{ artist.name }} — Lyrics Library{% endblock %}
 {% block content %}
 
-<!-- Full-bleed background with dark overlay -->
-<div class="fixed inset-0 -z-10">
-  <div class="w-full h-full bg-cover bg-center"
-       style="background-image:url('https://images.unsplash.com/photo-1721623777765-1381ba32859c?auto=format&fit=crop&w=1800&q=60');"></div>
-  <div class="absolute inset-0 bg-black/60"></div>
-</div>
-
-<!-- Page container -->
-<div class="relative z-10 pt-16 sm:pt-20 px-4 sm:px-6 lg:px-8 pb-16">
-  <div class="max-w-5xl mx-auto">
-
-    <!-- Album Header -->
-    <section class="mb-10 sm:mb-12">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        <!-- Album Art -->
-        <div class="flex justify-center md:justify-start">
-          <div class="w-64 h-64 sm:w-80 sm:h-80 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl ring-2 ring-white/20">
-            <div class="w-full h-full flex items-center justify-center text-7xl sm:text-8xl font-bold text-white/80">
-              {{ album.title|first|upper }}
-            </div>
+<div class="page-container py-8 sm:py-12">
+  <!-- Album Header -->
+  <section class="mb-10 sm:mb-12">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-start">
+      <!-- Album Cover -->
+      <div class="flex justify-center md:justify-start">
+        <div class="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 rounded-2xl overflow-hidden bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-2xl ring-2 ring-white/20">
+          {% if album.get_image_url %}
+          <img src="{{ album.get_image_url }}"
+               alt="{{ album.title }}"
+               class="w-full h-full object-cover"
+               loading="lazy">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-8xl sm:text-9xl font-bold text-white/80">
+            {{ album.title|first|upper }}
           </div>
-        </div>
-
-        <!-- Album Info -->
-        <div class="space-y-4 text-center md:text-left">
-          <div>
-            <p class="text-sm sm:text-base text-white/60 uppercase tracking-wide mb-2">Album</p>
-            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight mb-3">
-              {{ album.title }}
-            </h1>
-            <p class="text-lg sm:text-xl text-white/80">
-              by
-              <a href="{% url 'artist_detail' artist=artist.slug %}"
-                 class="link font-semibold hover:text-emerald-400">
-                {{ artist.name }}
-              </a>
-            </p>
-          </div>
-
-          <div class="text-white/70 space-y-2">
-            {% if album.year %}
-            <p class="flex items-center gap-2 justify-center md:justify-start">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              <span>Released: {{ album.year }}</span>
-            </p>
-            {% endif %}
-            <p class="flex items-center gap-2 justify-center md:justify-start">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-              </svg>
-              <span>{% with cnt=songs|length %}{{ cnt }} song{{ cnt|pluralize }}{% endwith %}</span>
-            </p>
-            {% if view_count %}
-            <p class="flex items-center gap-2 justify-center md:justify-start">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <span>{{ view_count|floatformat:0 }} view{{ view_count|pluralize }}</span>
-            </p>
-            {% endif %}
-          </div>
+          {% endif %}
         </div>
       </div>
-    </section>
 
-    <!-- Songs List -->
-    <section>
-      <div class="bg-white/10 backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-xl ring-1 ring-white/10">
-        <h2 class="text-2xl sm:text-3xl font-bold mb-6">Songs</h2>
-
-        {% if songs %}
-        <div class="space-y-3">
-          {% for song in songs %}
-          <a href="{% url 'song_detail' artist=artist.slug song=song.slug %}"
-             class="block p-4 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 transition-all group">
-            <div class="flex items-center justify-between gap-4">
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">
-                  {{ song.title }}
-                </h3>
-                {% if song.featured_artists.all %}
-                <p class="text-sm text-white/60 mt-1">
-                  feat. {% for artist in song.featured_artists.all %}{{ artist.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
-                </p>
-                {% endif %}
-              </div>
-              <div class="flex items-center gap-3 text-sm text-white/60">
-                {% if song.year %}
-                <span>{{ song.year }}</span>
-                {% endif %}
-                <svg class="w-5 h-5 text-white/40 group-hover:text-emerald-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </div>
-            </div>
-          </a>
-          {% endfor %}
+      <!-- Album Info -->
+      <div class="space-y-4 sm:space-y-6 text-center md:text-left">
+        <div>
+          <p class="text-sm sm:text-base text-white/60 uppercase tracking-wide mb-2">Album</p>
+          <h1 class="heading-1 mb-4">{{ album.title }}</h1>
+          <p class="text-lg sm:text-xl text-white/80">
+            by
+            <a href="{% url 'artist_detail' artist=artist.slug %}"
+               class="link font-semibold hover:text-emerald-400">
+              {{ artist.name }}
+            </a>
+            {% if album.additional_artists.all %}
+              {% for additional in album.additional_artists.all %}
+                , <a href="{% url 'artist_detail' artist=additional.slug %}"
+                     class="link font-semibold hover:text-emerald-400">
+                  {{ additional.name }}
+                </a>
+              {% endfor %}
+            {% endif %}
+          </p>
         </div>
-        {% else %}
-        <p class="text-white/60 text-center py-8">No songs in this album yet.</p>
-        {% endif %}
-      </div>
-    </section>
 
-  </div>
+        <div class="flex flex-wrap gap-4 justify-center md:justify-start text-white/70">
+          {% if album.year %}
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Released: {{ album.year }}</span>
+          </div>
+          {% endif %}
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+            </svg>
+            <span>{% with cnt=songs|length %}{{ cnt }} song{{ cnt|pluralize }}{% endwith %}</span>
+          </div>
+          {% if view_count %}
+          <div class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span>{{ view_count|floatformat:0 }} view{{ view_count|pluralize }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Songs List -->
+  <section>
+    <div class="flex items-end justify-between mb-6">
+      <h2 class="heading-2">Songs</h2>
+    </div>
+
+    {% if songs %}
+    <div class="space-y-3">
+      {% for song in songs %}
+      <a href="{% url 'song_detail' artist=artist.slug song=song.slug %}"
+         class="card hover:bg-white/15 transition-all group flex items-center gap-4">
+        <!-- Song Number -->
+        <div class="flex-shrink-0 w-8 text-center">
+          <span class="text-lg font-bold text-white/40 group-hover:text-emerald-400 transition-colors">
+            {{ forloop.counter }}
+          </span>
+        </div>
+
+        <!-- Song Image -->
+        <div class="flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-gradient-to-br from-white/10 to-white/5 ring-1 ring-white/10">
+          {% if song.get_image_url %}
+          <img src="{{ song.get_image_url }}"
+               alt="{{ song.title }}"
+               class="w-full h-full object-cover"
+               loading="lazy">
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center text-xl font-bold text-white/80">
+            {{ song.title|first|upper }}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Song Info -->
+        <div class="flex-1 min-w-0">
+          <h3 class="font-semibold text-base sm:text-lg text-white group-hover:text-emerald-400 transition truncate">
+            {{ song.title }}
+          </h3>
+          {% if song.additional_artists.all or song.featured_artists.all %}
+          <p class="text-sm text-white/60 mt-1 truncate">
+            {% if song.additional_artists.all %}
+              {% for additional in song.additional_artists.all %}{{ additional.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              {% if song.featured_artists.all %} {% endif %}
+            {% endif %}
+            {% if song.featured_artists.all %}
+              feat. {% for featured in song.featured_artists.all %}{{ featured.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% endif %}
+          </p>
+          {% endif %}
+        </div>
+
+        <!-- Song Year -->
+        <div class="flex-shrink-0 text-sm text-white/50 hidden sm:block">
+          {% if song.year %}{{ song.year }}{% endif %}
+        </div>
+
+        <!-- Arrow Icon -->
+        <div class="flex-shrink-0">
+          <svg class="w-5 h-5 text-white/40 group-hover:text-emerald-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card text-center py-12">
+      <p class="text-white/60">No songs in this album yet.</p>
+    </div>
+    {% endif %}
+  </section>
 </div>
 
 {% endblock %}
