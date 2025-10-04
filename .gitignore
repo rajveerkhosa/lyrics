@@ -60,6 +60,9 @@ yarn.lock
 *.dump
 *.backup
 
+# --- Song data files ---
+songs/
+
 # --- OS/Editor specific ---
 .DS_Store
 .DS_Store?
